@@ -1,4 +1,5 @@
-define(['exports', 'miruken-core', 'miruken-callback'], function (exports, mirukenCore, mirukenCallback) { 'use strict';
+(function (exports,mirukenCore,mirukenCallback) {
+'use strict';
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
@@ -457,6 +458,4 @@ exports.mapping = mapping;
 exports.root = root;
 exports.ignore = ignore;
 
-Object.defineProperty(exports, '__esModule', { value: true });
-
-});
+}((this.miruken-map = this.miruken-map || {}),mirukenCore,mirukenCallback));

@@ -1,13 +1,6 @@
 System.config({
   defaultJSExtensions: true,
-  transpiler: "babel",
-  babelOptions: {
-    "optional": [
-      "runtime",
-      "optimisation.modules.system"
-    ],
-    "stage": 0
-  },
+  transpiler: false,
   paths: {
     "github:*": "jspm_packages/github/*",
     "npm:*": "jspm_packages/npm/*"
@@ -188,7 +181,7 @@ System.config({
       "base64-js": "npm:base64-js@0.0.8",
       "child_process": "github:jspm/nodelibs-child_process@0.1.0",
       "fs": "github:jspm/nodelibs-fs@0.1.2",
-      "ieee754": "npm:ieee754@1.1.6",
+      "ieee754": "npm:ieee754@1.1.8",
       "isarray": "npm:isarray@1.0.0",
       "process": "github:jspm/nodelibs-process@0.1.2"
     },
@@ -293,7 +286,6 @@ System.config({
       "reflect-metadata": "npm:reflect-metadata@0.1.8"
     },
     "npm:miruken-core@0.0.1": {
-      "babel-core": "npm:babel-core@6.16.0",
       "reflect-metadata": "npm:reflect-metadata@0.1.8"
     },
     "npm:miruken-validate@0.0.1": {
