@@ -278,12 +278,11 @@ System.config({
       "path": "github:jspm/nodelibs-path@0.1.0"
     },
     "npm:miruken-callback@0.0.1": {
-      "babel-core": "npm:babel-core@6.16.0",
-      "reflect-metadata": "npm:reflect-metadata@0.1.8"
+      "miruken-core": "npm:miruken-core@0.0.1"
     },
     "npm:miruken-context@0.0.1": {
-      "babel-core": "npm:babel-core@6.16.0",
-      "reflect-metadata": "npm:reflect-metadata@0.1.8"
+      "miruken-callback": "npm:miruken-callback@0.0.1",
+      "miruken-core": "npm:miruken-core@0.0.1"
     },
     "npm:miruken-core@0.0.1": {
       "reflect-metadata": "npm:reflect-metadata@0.1.8"
