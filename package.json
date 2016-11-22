@@ -1,6 +1,6 @@
 {
   "name": "miruken-map",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "registry": "npm",
   "description": "Provides mapping feature",
   "keywords": [
