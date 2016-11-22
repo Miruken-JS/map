@@ -458,4 +458,4 @@ exports.mapping = mapping;
 exports.root = root;
 exports.ignore = ignore;
 
-}((this.miruken-map = this.miruken-map || {}),mirukenCore,mirukenCallback));
+}((this.mirukenMap = this.mirukenMap || {}),mirukenCore,mirukenCallback));
