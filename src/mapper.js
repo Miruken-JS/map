@@ -197,7 +197,7 @@ $handle(Handler.prototype, MapFrom, function (mapFrom, composer) {
     const target = mapFrom.object,
           source = $classOf(target);
     if ($isNothing(source)) { return false; }
-    return $mapFrom.dispatch(this, mapFrom, source, composer, false, m => mapFrom.mapping = m);
+    return $mapFrom.dispatch(this, mapFrom, source, composer, false, m => { mapFrom.mapping = m; });
 });
 
 $handle(Handler.prototype, MapTo, function (mapTo, composer) {
@@ -206,5 +206,5 @@ $handle(Handler.prototype, MapTo, function (mapTo, composer) {
                           ? classOrInstance
                           : $classOf(classOrInstance);
     if ($isNothing(source)) { return false; }
-    return $mapTo.dispatch(this, mapTo, source, composer, false, m => mapTo.mapping = m);
+    return $mapTo.dispatch(this, mapTo, source, composer, false, m => { mapTo.mapping = m; });
 });
