@@ -216,7 +216,7 @@ mirukenCallback.$handle(mirukenCallback.Handler.prototype, MapFrom, function (ma
         return false;
     }
     return $mapFrom.dispatch(this, mapFrom$$1, source, composer, false, function (m) {
-        return mapFrom$$1.mapping = m;
+        mapFrom$$1.mapping = m;
     });
 });
 
@@ -227,7 +227,7 @@ mirukenCallback.$handle(mirukenCallback.Handler.prototype, MapTo, function (mapT
         return false;
     }
     return $mapTo.dispatch(this, mapTo$$1, source, composer, false, function (m) {
-        return mapTo$$1.mapping = m;
+        mapTo$$1.mapping = m;
     });
 });
 
