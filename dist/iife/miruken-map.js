@@ -115,7 +115,7 @@ var Mapping = mirukenCore.Protocol.extend({
     mapTo: function mapTo(value, format$$1, classOrInstance, options) {}
 });
 
-var Mapper = mirukenCore.StrictProtocol.extend(Mapping);
+var Mapper = Mapping.extend();
 
 var MapCallback = mirukenCore.Base.extend({
     constructor: function constructor(format$$1, options) {

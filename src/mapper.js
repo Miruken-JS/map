@@ -1,6 +1,6 @@
 import {
-    Base, Protocol, StrictProtocol,typeOf,
-    $isNothing, $isFunction, $classOf
+    Base, Protocol, typeOf, $isNothing,
+    $isFunction, $classOf
 } from "miruken-core";
 
 import {
@@ -39,12 +39,11 @@ export const Mapping = Protocol.extend({
 });
 
 /**
- * Protocol for mapping objects strictly.
+ * Protocol for mapping objects.
  * @class Mapper
- * @extends StrictProtocol
- * @uses Mapping
+ * @extends Mapping
  */        
-export const Mapper = StrictProtocol.extend(Mapping);
+export const Mapper = Mapping.extend();
 
 /**
  * Base callback for mapping.

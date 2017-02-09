@@ -1,4 +1,4 @@
-import { $classOf, $equals, $flatten, $isFunction, $isNothing, $isPlainObject, $isSymbol, Base, Metadata, Protocol, StrictProtocol, Variance, decorate, design, emptyArray, getPropertyDescriptors, instanceOf, isDescriptor, typeOf } from 'miruken-core';
+import { $classOf, $equals, $flatten, $isFunction, $isNothing, $isPlainObject, $isSymbol, Base, Metadata, Protocol, Variance, decorate, design, emptyArray, getPropertyDescriptors, instanceOf, isDescriptor, typeOf } from 'miruken-core';
 import { $composer, $define, $handle, $unhandled, Handler, addDefinition } from 'miruken-callback';
 
 function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
@@ -115,7 +115,7 @@ var Mapping = Protocol.extend({
     mapTo: function mapTo(value, format$$1, classOrInstance, options) {}
 });
 
-var Mapper = StrictProtocol.extend(Mapping);
+var Mapper = Mapping.extend();
 
 var MapCallback = Base.extend({
     constructor: function constructor(format$$1, options) {
