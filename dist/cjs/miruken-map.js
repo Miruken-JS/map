@@ -115,8 +115,8 @@ function _applyDecoratedDescriptor$1(target, property, decorators, descriptor, c
 }
 
 var Mapping = mirukenCore.Protocol.extend({
-    mapFrom: function mapFrom(object, format$$1, options) {},
-    mapTo: function mapTo(value, format$$1, classOrInstance, options) {}
+    mapFrom: function mapFrom$$1(object, format$$1, options) {},
+    mapTo: function mapTo$$1(value, format$$1, classOrInstance, options) {}
 });
 
 var Mapper = Mapping.extend();
@@ -194,10 +194,10 @@ var MappingHandler = mirukenCallback.Handler.extend(Mapper, {
 });
 
 var AbstractMapping = mirukenCallback.Handler.extend((_obj$1 = {
-    mapFrom: function mapFrom(_mapFrom, composer) {
+    mapFrom: function mapFrom$$1(_mapFrom, composer) {
         return mirukenCallback.$unhandled;
     },
-    mapTo: function mapTo(_mapTo, composer) {},
+    mapTo: function mapTo$$1(_mapTo, composer) {},
     canSetProperty: function canSetProperty(descriptor) {
         return !mirukenCore.$isFunction(descriptor.value);
     },
@@ -291,7 +291,7 @@ var JsonMapping = AbstractMapping.extend(format(JsonFormat, JsonContentType), (_
             return mapper.mapFrom(elem, format$$1, options);
         });
     },
-    mapFrom: function mapFrom(_mapFrom, composer) {
+    mapFrom: function mapFrom$$1(_mapFrom, composer) {
         var _this = this;
 
         var object = _mapFrom.object;
@@ -370,7 +370,7 @@ var JsonMapping = AbstractMapping.extend(format(JsonFormat, JsonContentType), (_
             return mapper.mapTo(elem, format$$1, type, options);
         });
     },
-    mapTo: function mapTo(_mapTo, composer) {
+    mapTo: function mapTo$$1(_mapTo, composer) {
         var _this2 = this;
 
         var value = _mapTo.value;
