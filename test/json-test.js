@@ -7,6 +7,7 @@ import { mapFrom, mapTo, format } from "../src/decorators";
 import { expect } from "chai";
 
 const Person = Base.extend({
+    $type:    "Person",
     firstName: undefined,
     lastName:  undefined,
     age:       undefined,
@@ -17,6 +18,7 @@ const Person = Base.extend({
 });
 
 const Doctor = Person.extend({
+    $type: "Doctor",
     @design(Person)
     nurse: undefined,
     @design([Person])
@@ -218,6 +220,7 @@ describe("JsonMapping", () => {
                   }),
                   json = mapper.mapFrom(person, JsonFormat);
             expect(json).to.eql({
+                $type:     "Person",
                 firstName: "Christiano",
                 lastName:  "Ronaldo",
                 age:       23
@@ -228,7 +231,7 @@ describe("JsonMapping", () => {
             const person    = new Person();
             person.password = "1234";
             const json      = mapper.mapFrom(person, JsonFormat);
-            expect(json).to.eql({});
+            expect(json).to.eql({$type: "Person"});
         });
         
         it("should map specific properties", () => {
@@ -262,14 +265,17 @@ describe("JsonMapping", () => {
                   });
             const json = mapper.mapFrom(doctor, JsonFormat);
             expect(json).to.eql({
+                $type:     "Doctor",
                 firstName: "Mitchell",
                 lastName:  "Moskowitz",
                 nurse: {
+                    $type:     "Person",
                     firstName: "Clara",
                     lastName:  "Barton",
                     age:       36
                 },
                 patients: [{
+                    $type:     "Person",
                     firstName: "Lionel",
                     lastName:  "Messi",
                     age:       24
