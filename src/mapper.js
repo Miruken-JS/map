@@ -192,11 +192,11 @@ export const AbstractMapping = Handler.extend({
     },
     mapToEnum(enumType, valueOrName) {
         if ($isString(valueOrName)) {
-            var e = enumType[valueOrName];
-            if (e == null) {
+            const enumInstance = enumType[valueOrName];
+            if (enumInstance == null) {
                 throw new TypeError(`'${valueOrName}' is not a valid name for this Enum.`);                
             }
-            return e;
+            return enumInstance;
         } else {
             return enumType.fromValue(valueOrName);
         }
