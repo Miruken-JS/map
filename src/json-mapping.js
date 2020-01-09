@@ -1,5 +1,5 @@
 import {
-    design, instanceOf, $isNothing,
+    Enum, design, instanceOf, $isNothing,
     $isFunction, $isSymbol, $isPlainObject,
     getPropertyDescriptors, emptyArray
 } from "miruken-core";
@@ -89,7 +89,7 @@ export const JsonMapping = AbstractMapping.extend(
         });
         return json;
     },
-   
+
     @mapTo(Date)
     mapToDate(mapTo) {
         const date = mapTo.value;
@@ -114,8 +114,11 @@ export const JsonMapping = AbstractMapping.extend(
     mapTo(mapTo, composer) {
         const value = mapTo.value;
         if (!_canMapJson(value)) { return; }
-        if (this.isPrimitiveValue(value)) { return value; }
         const classOrInstance = mapTo.classOrInstance;
+        if (classOrInstance.prototype instanceof Enum) {
+            return this.mapToEnum(classOrInstance, value);
+        }
+        if (this.isPrimitiveValue(value)) { return value; }
         if ($isNothing(classOrInstance)) { return; }
         const format  = mapTo.format,
               options = mapTo.options,

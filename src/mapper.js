@@ -1,6 +1,6 @@
 import {
-    Base, Protocol, typeOf, $isNothing,
-    $isFunction, $classOf
+    Base, Protocol, typeOf, $isString,
+    $isNothing, $isFunction, $classOf
 } from "miruken-core";
 
 import {
@@ -189,6 +189,17 @@ export const AbstractMapping = Handler.extend({
             return true;
         }
         return false;        
+    },
+    mapToEnum(enumType, valueOrName) {
+        if ($isString(valueOrName)) {
+            var e = enumType[valueOrName];
+            if (e == null) {
+                throw new TypeError(`'${valueOrName}' is not a valid name for this Enum.`);                
+            }
+            return e;
+        } else {
+            return enumType.fromValue(valueOrName);
+        }
     }
 });
 

@@ -1,10 +1,12 @@
-import { Base, design } from "miruken-core";
+import { Base, Enum, design } from "miruken-core";
 import { Context } from "miruken-context";
 import { root, ignore } from "../src/mapping";
 import { Mapping, Mapper, MappingHandler } from "../src/mapper";
 import { JsonFormat, JsonMapping } from "../src/json-mapping";
 import { mapFrom, mapTo, format } from "../src/decorators";
 import { expect } from "chai";
+
+const Color = Enum({red: 1, blue: 2, green: 3});
 
 const Person = Base.extend({
     $type:    "Person",
@@ -13,6 +15,8 @@ const Person = Base.extend({
     age:       undefined,
     @ignore
     password:  undefined,
+    @design(Color)
+    eyeColor:  undefined,
     get hobbies() { return this._hobbies; },
     set hobbies(value) { this._hobbies = value; }
 });
@@ -44,11 +48,13 @@ describe("JsonMapping", () => {
             const person = mapper.mapTo({
                 firstName:  "David",
                 lastName:   "Beckham",
+                eyeColor:   2,
                 occupation: "soccer"
             }, JsonFormat, Person);
             expect(person).to.be.instanceOf(Person);
             expect(person.firstName).to.equal("David");
             expect(person.lastName).to.equal("Beckham");
+            expect(person.eyeColor).to.equal(Color.blue);
             expect(person.occupation).to.be.undefined;
         });
 
@@ -67,6 +73,24 @@ describe("JsonMapping", () => {
             expect(mapper.mapTo(false, JsonFormat)).to.equal(false);           
             expect(mapper.mapTo("hello", JsonFormat)).to.equal("hello");
             expect(mapper.mapTo("goodbye", JsonFormat)).to.equal("goodbye");
+        });
+
+        it("should map enum value", () => {
+            expect(mapper.mapTo(1, JsonFormat, Color)).to.equal(Color.red);
+            expect(mapper.mapTo(2, JsonFormat, Color)).to.equal(Color.blue);
+            expect(mapper.mapTo(3, JsonFormat, Color)).to.equal(Color.green);
+            expect(() => {
+                expect(mapper.mapTo(4, JsonFormat, Color)).to.equal(Color.green);                            
+            }).to.throw(TypeError, "4 is not a valid value for this Enum");
+        });
+
+        it("should map enum name", () => {
+            expect(mapper.mapTo("red", JsonFormat, Color)).to.equal(Color.red);
+            expect(mapper.mapTo("blue", JsonFormat, Color)).to.equal(Color.blue);
+            expect(mapper.mapTo("green", JsonFormat, Color)).to.equal(Color.green);
+            expect(() => {
+                expect(mapper.mapTo("purple", JsonFormat, Color)).to.equal(Color.green);                            
+            }).to.throw(TypeError, "'purple' is not a valid name for this Enum");
         });
         
         it("should map all from json", () => {
@@ -204,6 +228,12 @@ describe("JsonMapping", () => {
             expect(mapper.mapFrom(/abc/, JsonFormat)).to.eql("/abc/");
         });
 
+        it("should map to enum value", () => {
+            expect(mapper.mapFrom(Color.red, JsonFormat)).to.equal(1);
+            expect(mapper.mapFrom(Color.blue, JsonFormat)).to.equal(2);
+            expect(mapper.mapFrom(Color.green, JsonFormat)).to.equal(3);
+        });
+        
         it("should map arrays of primitives", () => {
             expect(mapper.mapFrom([1,2,3], JsonFormat)).to.eql([1,2,3]);
             expect(mapper.mapFrom([false,true], JsonFormat)).to.eql([false,true]);
@@ -216,14 +246,16 @@ describe("JsonMapping", () => {
             const person = new Person({
                       firstName: "Christiano",
                       lastName:  "Ronaldo",
-                      age:       23
+                      age:       23,
+                      eyeColor:  Color.blue
                   }),
                   json = mapper.mapFrom(person, JsonFormat);
             expect(json).to.eql({
                 $type:     "Person",
                 firstName: "Christiano",
                 lastName:  "Ronaldo",
-                age:       23
+                age:       23,
+                eyeColor:  2
             });
         });
 
