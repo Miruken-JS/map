@@ -83,15 +83,6 @@ describe("JsonMapping", () => {
                 expect(mapper.mapTo(4, JsonFormat, Color)).to.equal(Color.green);                            
             }).to.throw(TypeError, "4 is not a valid value for this Enum");
         });
-
-        it("should map enum name", () => {
-            expect(mapper.mapTo("red", JsonFormat, Color)).to.equal(Color.red);
-            expect(mapper.mapTo("blue", JsonFormat, Color)).to.equal(Color.blue);
-            expect(mapper.mapTo("green", JsonFormat, Color)).to.equal(Color.green);
-            expect(() => {
-                expect(mapper.mapTo("purple", JsonFormat, Color)).to.equal(Color.green);                            
-            }).to.throw(TypeError, "'purple' is not a valid name for this Enum");
-        });
         
         it("should map all from json", () => {
             const person = mapper.mapTo({
