@@ -115,10 +115,11 @@ export const JsonMapping = AbstractMapping.extend(
         const value = mapTo.value;
         if (!_canMapJson(value)) { return; }
         const classOrInstance = mapTo.classOrInstance;
-        if (classOrInstance.prototype instanceof Enum) {
-            return this.mapToEnum(classOrInstance, value);
+        if (this.isPrimitiveValue(value)) {
+            return classOrInstance && classOrInstance.prototype instanceof Enum
+                 ? this.mapToEnum(classOrInstance, value)
+                 : value;
         }
-        if (this.isPrimitiveValue(value)) { return value; }
         if ($isNothing(classOrInstance)) { return; }
         const format  = mapTo.format,
               options = mapTo.options,
