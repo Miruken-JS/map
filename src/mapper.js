@@ -74,7 +74,7 @@ const MapCallback = Base.extend({
 
 /**
  * Callback to map an `object` to `format`.
- * @class MapTo
+ * @class MapFrom
  * @constructor
  * @param   {Object}  object     -  object to map
  * @param   {Any}     format     -  format specifier
@@ -83,6 +83,9 @@ const MapCallback = Base.extend({
  */
 export const MapFrom = MapCallback.extend({
     constructor(object, format, options) {
+        if ($isNothing(object)) {
+            throw new TypeError("Missing object to map");
+        }        
         this.base(format, options);
         this.extend({
             /**
@@ -97,7 +100,7 @@ export const MapFrom = MapCallback.extend({
 
 /**
  * Callback to map a formatted `value` into an object.
- * @class MapFrom
+ * @class MapTo
  * @constructor
  * @param   {Any}              value            -  formatted value
  * @param   {Any}              format           -  format specifier
@@ -107,10 +110,12 @@ export const MapFrom = MapCallback.extend({
  */
 export const MapTo = MapCallback.extend({
     constructor(value, format, classOrInstance, options) {
+        if ($isNothing(value)) {
+            throw new TypeError("Missing value to map from");
+        }        
         this.base(format, options);
-        if ($isNothing(classOrInstance)) {
-            classOrInstance = $isString(value)
-                ? value : $classOf(value);
+        if ($isNothing(classOrInstance) && !$isString(value)) {
+            classOrInstance = $classOf(value);
         }
         this.extend({
             /**
@@ -201,6 +206,6 @@ $handle(Handler.prototype, MapFrom, function (mapFrom, composer) {
 });
 
 $handle(Handler.prototype, MapTo, function (mapTo, composer) {
-    const source = mapTo.classOrInstance;
+    const source = mapTo.classOrInstance || mapTo.value;
     return $mapTo.dispatch(this, mapTo, source, composer, false, m => { mapTo.mapping = m; });
 });
