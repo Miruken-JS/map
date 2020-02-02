@@ -109,7 +109,8 @@ export const MapTo = MapCallback.extend({
     constructor(value, format, classOrInstance, options) {
         this.base(format, options);
         if ($isNothing(classOrInstance)) {
-            classOrInstance = $classOf(value);
+            classOrInstance = $isString(value)
+                ? value : $classOf(value);
         }
         this.extend({
             /**
@@ -200,10 +201,6 @@ $handle(Handler.prototype, MapFrom, function (mapFrom, composer) {
 });
 
 $handle(Handler.prototype, MapTo, function (mapTo, composer) {
-    const classOrInstance = mapTo.classOrInstance,
-          source          = $isFunction(classOrInstance)
-                          ? classOrInstance
-                          : $classOf(classOrInstance);
-    if ($isNothing(source)) { return false; }
+    const source = mapTo.classOrInstance;
     return $mapTo.dispatch(this, mapTo, source, composer, false, m => { mapTo.mapping = m; });
 });
