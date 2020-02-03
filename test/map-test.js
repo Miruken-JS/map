@@ -1,13 +1,13 @@
-import { Base, design } from "miruken-core";
-import { Handler } from "miruken-callback";
+import { Base } from "miruken-core";
 import { Context } from "miruken-context";
 import { Mapper, MappingHandler } from "../src/mapper";
-import { mapTo, format } from "../src/decorators";
+import { format } from "../src/decorators";
+import { TypeMapping, TypeFormat, registerType } from "../src/type-mapping";
 import { expect } from "chai";
 
-export const DesignFormat = Symbol();
+const Request = Base.extend(registerType);
 
-const GetDetails = Base.extend({
+const GetDetails = Request.extend({
     $type: "GetDetails",
     id:    undefined,
 });
@@ -18,28 +18,22 @@ const UpdateDetails = Base.extend({
     details: undefined
 });
 
-const DesignMapping = Handler.extend(format(DesignFormat), {
-    @mapTo(GetDetails.prototype.$type)
-    mapGetDetails() { return GetDetails; }
-});
-
 describe("Mapping", () => {
     let context, mapper;
     beforeEach(() => {
         context = new Context();
-        context.addHandlers(new MappingHandler(), new DesignMapping());
+        context.addHandlers(new MappingHandler(), new TypeMapping());
         mapper = Mapper(context);
     });
 
-    const TypeMapping = 
     describe("#mapTo", () => {
         it("should map type string to Type", () => {
-            const type = mapper.mapTo("GetDetails", DesignFormat);
-            expect(type).to.equal(GetDetails);            
+            const type = mapper.mapTo("GetDetails", TypeFormat);
+            expect(type).to.equal(GetDetails);
         });
 
         it("should not map type string to Type if missing", () => {
-            const type = mapper.mapTo("UpdateDetails", DesignFormat);
+            const type = mapper.mapTo("UpdateDetails", TypeFormat);
             expect(type).to.be.undefined;
         });        
     });
