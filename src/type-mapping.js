@@ -1,14 +1,24 @@
 import {
-    isDescriptor, decorate,
-    $isFunction, $isString
+    isDescriptor, decorate, $isFunction, $isString
 } from "miruken-core";
 
 import { Handler } from "miruken-callback";
+import { Mapper } from "./mapper";
 import { mapTo, format } from "./decorators";
 
 export const TypeFormat = Symbol();
 
 export const TypeMapping = Handler.extend(format(TypeFormat));
+
+Handler.implement({
+    getTypeFromString(typeString) {
+        if (!$isString(typeString)) {
+            throw new Error(`Invalid type string '${typeString}'`);
+        }
+        const stripped = typeString.replace(/\s+/g, '');
+        return Mapper(this).mapTo(stripped, TypeFormat);
+    }
+});
 
 export function registerType(target, key, descriptor) {
     if (isDescriptor(descriptor)) {
@@ -29,12 +39,13 @@ export function registerType(target, key, descriptor) {
 function addTypeMapping(type) {
     const typeString = type.prototype.$type;
     if ($isString(typeString)) {
-        const method  = Symbol(),
-              mapping = {
+        const stripped = typeString.replace(/\s+/g, ''),
+              method   = Symbol(),
+              mapping  = {
                   [method] () { return type; }            
               };
         Object.defineProperty(mapping, method,
-            Reflect.decorate([mapTo(typeString)], mapping, method,
+            Reflect.decorate([mapTo(stripped)], mapping, method,
                              Object.getOwnPropertyDescriptor(mapping, method)));
         TypeMapping.implement(mapping);
     }
