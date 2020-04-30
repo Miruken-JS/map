@@ -8,8 +8,8 @@ import {
 } from "miruken-callback";
 
 import {
-    mapFrom, mapTo, $mapFrom, $mapTo
-} from "./decorators";
+    mapsFrom, mapsTo, $mapFrom, $mapTo
+} from "./maps";
 
 /**
  * Protocol for mapping objects.
@@ -174,13 +174,13 @@ export const MappingHandler = Handler.extend(Mapper, {
  * @extends Handler
  */        
 export const AbstractMapping = Handler.extend({
-    @mapFrom
-    mapFrom(mapFrom, composer) {
+    @mapsFrom
+    mapsFrom(mapsFrom, composer) {
         return $unhandled;
     },
 
-    @mapTo
-    mapTo(mapTo, composer) {
+    @mapsTo
+    mapsTo(mapsTo, composer) {
     },
 
     canSetProperty(descriptor) {

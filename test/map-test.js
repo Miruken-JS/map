@@ -1,7 +1,7 @@
 import { Base } from "miruken-core";
 import { Context } from "miruken-context";
 import { Mapper, MappingHandler } from "../src/mapper";
-import { format } from "../src/decorators";
+import { format } from "../src/maps";
 import { TypeMapping, TypeFormat, registerType } from "../src/type-mapping";
 import { expect } from "chai";
 

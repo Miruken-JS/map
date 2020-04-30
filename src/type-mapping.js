@@ -4,7 +4,7 @@ import {
 
 import { Handler } from "miruken-callback";
 import { Mapper } from "./mapper";
-import { mapTo, format } from "./decorators";
+import { mapsTo, format } from "./maps";
 
 export const TypeFormat = Symbol();
 
@@ -45,7 +45,7 @@ function addTypeMapping(type) {
                   [method] () { return type; }            
               };
         Object.defineProperty(mapping, method,
-            Reflect.decorate([mapTo(stripped)], mapping, method,
+            Reflect.decorate([mapsTo(stripped)], mapping, method,
                              Object.getOwnPropertyDescriptor(mapping, method)));
         TypeMapping.implement(mapping);
     }

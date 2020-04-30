@@ -6,7 +6,7 @@ import {
 
 import { mapping } from "./mapping";
 import { Mapper, AbstractMapping } from "./mapper";
-import { mapFrom, mapTo, format } from "./decorators";
+import { mapsFrom, mapsTo, format } from "./maps";
 
 /**
  * Javascript Object Notation
@@ -23,30 +23,30 @@ export const JsonFormat      = Symbol(),
  */
 export const JsonMapping = AbstractMapping.extend(
     format(JsonFormat, JsonContentType), {
-    @mapFrom(Date)
-    mapFromDate(mapFrom) {
-        return mapFrom.object.toJSON();
+    @mapsFrom(Date)
+    mapFromDate(mapsFrom) {
+        return mapsFrom.object.toJSON();
     },
-    @mapFrom(RegExp)
-    mapFromRegExp(mapFrom) {
-        return mapFrom.object.toString();
+    @mapsFrom(RegExp)
+    mapFromRegExp(mapsFrom) {
+        return mapsFrom.object.toString();
     },
-    @mapFrom(Array)
-    mapFromArray(mapFrom, composer) {
-        const array   = mapFrom.object,
-              format  = mapFrom.format,
-              options = mapFrom.options,
+    @mapsFrom(Array)
+    mapFromArray(mapsFrom, composer) {
+        const array   = mapsFrom.object,
+              format  = mapsFrom.format,
+              options = mapsFrom.options,
               mapper  = Mapper(composer);
         return array.map(elem => mapper.mapFrom(elem, format, options)); 
     },
-    mapFrom(mapFrom, composer) {
-        const object = mapFrom.object;
+    mapsFrom(mapsFrom, composer) {
+        const object = mapsFrom.object;
         if (!_canMapJson(object)) { return; }
         if (this.isPrimitiveValue(object)) {
             return object && object.valueOf();
         }
-        const format  = mapFrom.format,
-              options = mapFrom.options,
+        const format  = mapsFrom.format,
+              options = mapsFrom.options,
               spec    = options && options.spec,
               raw     = $isPlainObject(object),
               all     = !$isPlainObject(spec);              
@@ -90,39 +90,39 @@ export const JsonMapping = AbstractMapping.extend(
         return json;
     },
 
-    @mapTo(Date)
-    mapToDate(mapTo) {
-        const date = mapTo.value;
+    @mapsTo(Date)
+    mapToDate(mapsTo) {
+        const date = mapsTo.value;
         return instanceOf(date, Date) ? date : Date.parse(date);
     },
-    @mapTo(RegExp)
-    mapToRegExp(mapTo) {
-        const pattern   = mapTo.value,
+    @mapsTo(RegExp)
+    mapToRegExp(mapsTo) {
+        const pattern   = mapsTo.value,
               fragments = pattern.match(/\/(.*?)\/([gimy])?$/);              
         return new RegExp(fragments[1], fragments[2] || "")
     },
-    @mapTo(Array)
-    mapToArray(mapTo, composer) {
-        const array   = mapTo.value,
-              format  = mapTo.format,
-              options = mapTo.options,
+    @mapsTo(Array)
+    mapToArray(mapsTo, composer) {
+        const array   = mapsTo.value,
+              format  = mapsTo.format,
+              options = mapsTo.options,
               mapper  = Mapper(composer);
-        let type = mapTo.classOrInstance;
+        let type = mapsTo.classOrInstance;
         type = Array.isArray(type) ? type[0] : undefined;
         return array.map(elem => mapper.mapTo(elem, format, type, options)); 
     },        
-    mapTo(mapTo, composer) {
-        const value = mapTo.value;
+    mapsTo(mapsTo, composer) {
+        const value = mapsTo.value;
         if (!_canMapJson(value)) { return; }
-        const classOrInstance = mapTo.classOrInstance;
+        const classOrInstance = mapsTo.classOrInstance;
         if (this.isPrimitiveValue(value)) {
             return classOrInstance && classOrInstance.prototype instanceof Enum
                  ? classOrInstance.fromValue(value)
                  : value;
         }
         if ($isNothing(classOrInstance)) { return; }
-        const format  = mapTo.format,
-              options = mapTo.options,
+        const format  = mapsTo.format,
+              options = mapsTo.options,
               object  = $isFunction(classOrInstance)
                       ? Reflect.construct(classOrInstance, emptyArray)
                       : classOrInstance;

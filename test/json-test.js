@@ -3,7 +3,7 @@ import { Context } from "miruken-context";
 import { root, ignore } from "../src/mapping";
 import { Mapping, Mapper, MappingHandler } from "../src/mapper";
 import { JsonFormat, JsonMapping } from "../src/json-mapping";
-import { mapFrom, mapTo, format } from "../src/decorators";
+import { mapsFrom, mapsTo, format } from "../src/maps";
 import { expect } from "chai";
 
 const Color = Enum({red: 1, blue: 2, green: 3});
@@ -186,7 +186,7 @@ describe("JsonMapping", () => {
         /*
         it("should override mapping", () => {
             const override = context.decorate({
-                                 @mapTo(Date)
+                                 @mapsTo(Date)
                                  @format(JsonFormat)
                                  mapDateFromJson(mapTo) {
                                      return new Date(mapTo.value);
