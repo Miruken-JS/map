@@ -4,22 +4,21 @@ import {
     getPropertyDescriptors, emptyArray
 } from "miruken-core";
 
-import { mapping } from "./mapping";
-import { Mapper, AbstractMapping } from "./mapper";
+import { mapping } from "./map-metadata";
+import { AbstractMapping } from "./abstract-mapping";
 import { mapsFrom, mapsTo, format } from "./maps";
 
 /**
  * Javascript Object Notation
  * @property {Any} JsonFormat
  */
-export const JsonFormat      = Symbol(),
+export const JsonFormat      = Symbol("json"),
              JsonContentType = "application/json";
 
 /**
  * Handler for performing mapping to javascript object.
  * @class JsonMapping
- * @extends Handler
- * @uses Mapper
+ * @extends AbstractMapping
  */
 export const JsonMapping = AbstractMapping.extend(
     format(JsonFormat, JsonContentType), {
@@ -35,9 +34,8 @@ export const JsonMapping = AbstractMapping.extend(
     mapFromArray(mapsFrom, composer) {
         const array   = mapsFrom.object,
               format  = mapsFrom.format,
-              options = mapsFrom.options,
-              mapper  = Mapper(composer);
-        return array.map(elem => mapper.mapFrom(elem, format, options)); 
+              options = mapsFrom.options;
+        return array.map(elem => composer.mapFrom(elem, format, options)); 
     },
     mapsFrom(mapsFrom, composer) {
         const object = mapsFrom.object;
@@ -60,7 +58,6 @@ export const JsonMapping = AbstractMapping.extend(
             return json;
         }
         const descriptors = getPropertyDescriptors(object),
-              mapper      = Mapper(composer),
               json        = {};
         Reflect.ownKeys(descriptors).forEach(key => {
             if (all || (key in spec)) {
@@ -79,7 +76,7 @@ export const JsonMapping = AbstractMapping.extend(
                     json[key] = keyValue && keyValue.valueOf();
                     return;
                 }
-                const keyJson = mapper.mapFrom(keyValue, format, keyOptions);
+                const keyJson = composer.mapFrom(keyValue, format, keyOptions);
                 if (map && map.root) {
                     Object.assign(json, keyJson);
                 } else {                 
@@ -105,11 +102,10 @@ export const JsonMapping = AbstractMapping.extend(
     mapToArray(mapsTo, composer) {
         const array   = mapsTo.value,
               format  = mapsTo.format,
-              options = mapsTo.options,
-              mapper  = Mapper(composer);
+              options = mapsTo.options;
         let type = mapsTo.classOrInstance;
         type = Array.isArray(type) ? type[0] : undefined;
-        return array.map(elem => mapper.mapTo(elem, format, type, options)); 
+        return array.map(elem => composer.mapTo(elem, format, type, options)); 
     },        
     mapsTo(mapsTo, composer) {
         const value = mapsTo.value;
@@ -128,14 +124,13 @@ export const JsonMapping = AbstractMapping.extend(
                       : classOrInstance;
         const dynamic     = options && options.dynamic,
               ignoreCase  = options && options.ignoreCase,
-              mapper      = Mapper(composer),
               descriptors = getPropertyDescriptors(object);
         Reflect.ownKeys(descriptors).forEach(key => {
             const descriptor = descriptors[key];
             if (this.canSetProperty(descriptor)) {
                 const map = mapping.get(object, key);
                 if (map && map.root) {
-                    object[key] = _mapFromJson(object, key, value, mapper, format, options);
+                    object[key] = _mapFromJson(object, key, value, composer, format, options);
                 }
             }
         });
@@ -149,7 +144,7 @@ export const JsonMapping = AbstractMapping.extend(
             if (keyValue === undefined) { continue; }
             if (descriptor) {
                 if (this.canSetProperty(descriptor)) {
-                    object[key] = _mapFromJson(object, key, keyValue, mapper, format, options);
+                    object[key] = _mapFromJson(object, key, keyValue, composer, format, options);
                 }
             } else {
                 const lkey  = key.toLowerCase();
@@ -157,7 +152,7 @@ export const JsonMapping = AbstractMapping.extend(
                 for (let k in descriptors) {
                     if (k.toLowerCase() === lkey) {
                         if (this.canSetProperty(descriptors[k])) {                        
-                            object[k] = _mapFromJson(object, k, keyValue, mapper, format, options);
+                            object[k] = _mapFromJson(object, k, keyValue, composer, format, options);
                         }
                         found = true;
                         break;
@@ -176,7 +171,7 @@ function _canMapJson(value) {
     return value !== undefined && !$isFunction(value) && !$isSymbol(value);
 }
 
-function _mapFromJson(target, key, value, mapper, format, options) {
+function _mapFromJson(target, key, value, composer, format, options) {
     const type = design.get(target, key);
-    return mapper.mapTo(value, format, type, options);
+    return composer.mapTo(value, format, type, options);
 }

@@ -3,10 +3,9 @@ import {
 } from "miruken-core";
 
 import { Handler } from "miruken-callback";
-import { Mapper } from "./mapper";
 import { mapsTo, format } from "./maps";
 
-export const TypeFormat = Symbol();
+export const TypeFormat = Symbol("type");
 
 export const TypeMapping = Handler.extend(format(TypeFormat));
 
@@ -16,7 +15,7 @@ Handler.implement({
             throw new Error(`Invalid type string '${typeString}'`);
         }
         const stripped = typeString.replace(/\s+/g, '');
-        return Mapper(this).mapTo(stripped, TypeFormat);
+        return this.mapTo(stripped, TypeFormat);
     }
 });
 

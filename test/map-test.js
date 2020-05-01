@@ -1,8 +1,10 @@
 import { Base } from "miruken-core";
+import { NotHandledError } from "miruken-callback";
 import { Context } from "miruken-context";
-import { Mapper, MappingHandler } from "../src/mapper";
 import { format } from "../src/maps";
 import { TypeMapping, TypeFormat, registerType } from "../src/type-mapping";
+import "../src/map-helper";
+
 import { expect } from "chai";
 
 const Request = Base.extend(registerType);
@@ -24,21 +26,20 @@ const UpdateDetails = Base.extend({
 });
 
 describe("Mapping", () => {
-    let context, mapper;
+    let context;
     beforeEach(() => {
         context = new Context();
-        context.addHandlers(new MappingHandler(), new TypeMapping());
-        mapper = Mapper(context);
+        context.addHandlers(new TypeMapping());
     });
 
     describe("#mapTo", () => {
         it("should map type string to Type", () => {
-            const type = mapper.mapTo("GetDetails", TypeFormat);
+            const type = context.mapTo("GetDetails", TypeFormat);
             expect(type).to.equal(GetDetails);
         });
 
         it("should ignore whitespace in type string", () => {
-            const type = mapper.mapTo("CreateDetails", TypeFormat);
+            const type = context.mapTo("CreateDetails", TypeFormat);
             expect(type).to.equal(CreateDetails);
         });
 
@@ -48,8 +49,9 @@ describe("Mapping", () => {
         });
         
         it("should not map type string to Type if missing", () => {
-            const type = mapper.mapTo("UpdateDetails", TypeFormat);
-            expect(type).to.be.undefined;
+            expect(() => {
+                context.mapTo("UpdateDetails", TypeFormat);
+            }).to.throw(NotHandledError, "UpdateDetails not handledcd");
         });
 
         it("should fail if type string not passed to helper", () => {

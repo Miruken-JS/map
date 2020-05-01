@@ -1,10 +1,10 @@
 import { Base, Enum, design } from "miruken-core";
 import { Context } from "miruken-context";
-import { root, ignore } from "../src/mapping";
-import { Mapping, Mapper, MappingHandler } from "../src/mapper";
+import { root, ignore } from "../src/map-metadata";
 import { JsonFormat, JsonMapping } from "../src/json-mapping";
 import { mapsFrom, mapsTo, format } from "../src/maps";
 import { expect } from "chai";
+import "../src/map-helper";
 
 const Color = Enum({red: 1, blue: 2, green: 3});
 
@@ -36,16 +36,15 @@ const PersonWrapper = Base.extend({
 });
 
 describe("JsonMapping", () => {
-    let context, mapper;
+    let context;
     beforeEach(() => {
         context = new Context();
-        context.addHandlers(new MappingHandler(), new JsonMapping());
-        mapper = Mapper(context);
+        context.addHandlers(new JsonMapping());
     });
     
     describe("#mapTo", () => {
         it("should map from json", () => {
-            const person = mapper.mapTo({
+            const person = context.mapTo({
                 firstName:  "David",
                 lastName:   "Beckham",
                 eyeColor:   2,
@@ -59,7 +58,7 @@ describe("JsonMapping", () => {
         });
 
         it("should ignore from json", () => {
-            const person = mapper.mapTo({
+            const person = context.mapTo({
                 password: "1234"
             }, JsonFormat, Person);
             expect(person).to.be.instanceOf(Person);
@@ -67,25 +66,25 @@ describe("JsonMapping", () => {
         });
         
         it("should pass through primitives", () => {
-            expect(mapper.mapTo(1, JsonFormat)).to.equal(1);
-            expect(mapper.mapTo(2, JsonFormat)).to.equal(2);
-            expect(mapper.mapTo(true, JsonFormat)).to.equal(true); 
-            expect(mapper.mapTo(false, JsonFormat)).to.equal(false);           
-            expect(mapper.mapTo("hello", JsonFormat)).to.equal("hello");
-            expect(mapper.mapTo("goodbye", JsonFormat)).to.equal("goodbye");
+            expect(context.mapTo(1, JsonFormat)).to.equal(1);
+            expect(context.mapTo(2, JsonFormat)).to.equal(2);
+            expect(context.mapTo(true, JsonFormat)).to.equal(true); 
+            expect(context.mapTo(false, JsonFormat)).to.equal(false);           
+            expect(context.mapTo("hello", JsonFormat)).to.equal("hello");
+            expect(context.mapTo("goodbye", JsonFormat)).to.equal("goodbye");
         });
 
         it("should map enum value", () => {
-            expect(mapper.mapTo(1, JsonFormat, Color)).to.equal(Color.red);
-            expect(mapper.mapTo(2, JsonFormat, Color)).to.equal(Color.blue);
-            expect(mapper.mapTo(3, JsonFormat, Color)).to.equal(Color.green);
+            expect(context.mapTo(1, JsonFormat, Color)).to.equal(Color.red);
+            expect(context.mapTo(2, JsonFormat, Color)).to.equal(Color.blue);
+            expect(context.mapTo(3, JsonFormat, Color)).to.equal(Color.green);
             expect(() => {
-                expect(mapper.mapTo(4, JsonFormat, Color)).to.equal(Color.green);                            
+                expect(context.mapTo(4, JsonFormat, Color)).to.equal(Color.green);                            
             }).to.throw(TypeError, "4 is not a valid value for this Enum");
         });
         
         it("should map all from json", () => {
-            const person = mapper.mapTo({
+            const person = context.mapTo({
                 firstName:  "David",
                 lastName:   "Beckham",
                 occupation: "soccer"
@@ -97,7 +96,7 @@ describe("JsonMapping", () => {
         });
 
         it("should map all related from json", () => {
-            const doctor = mapper.mapTo({
+            const doctor = context.mapTo({
                 firstName: "Mitchell",
                 lastName:  "Moskowitz",
                 hobbies:   ["golf", "cooking", "reading"],
@@ -128,7 +127,7 @@ describe("JsonMapping", () => {
         });
 
         it("should map all related from json ignoring case", () => {
-            const doctor = mapper.mapTo({
+            const doctor = context.mapTo({
                 FirstNAME: "Mitchell",
                 LASTName:  "Moskowitz",
                 nurse: {
@@ -145,7 +144,7 @@ describe("JsonMapping", () => {
         });
 
         it("should map arrays", () => {
-            const people = mapper.mapTo([{
+            const people = context.mapTo([{
                      firstName:  "David",
                      lastName:   "Beckham",
                      occupation: "soccer"
@@ -158,7 +157,7 @@ describe("JsonMapping", () => {
         });
 
         it("should infer arrays", () => {
-            const people = mapper.mapTo([{
+            const people = context.mapTo([{
                      firstName:  "David",
                      lastName:   "Beckham",
                      occupation: "soccer"
@@ -171,7 +170,7 @@ describe("JsonMapping", () => {
         });
         
         it("should map rooted json", () => {
-            const wrapper = mapper.mapTo({
+            const wrapper = context.mapTo({
                     firstName:  "David",
                     lastName:   "Beckham",
                     occupation: "soccer"
@@ -201,36 +200,36 @@ describe("JsonMapping", () => {
 
     describe("#mapFrom", () => {
         it("should ignore symbols", () => {
-            expect(mapper.mapFrom(Symbol(), JsonFormat)).to.be.undefined;
+            expect(context.mapFrom(Symbol(), JsonFormat)).to.be.undefined;
         });
 
         it("should ignore functions", () => {
-            expect(mapper.mapFrom(function () {}, JsonFormat)).to.be.undefined;
+            expect(context.mapFrom(function () {}, JsonFormat)).to.be.undefined;
         });
         
         it("should pass through primitives", () => {
-            expect(mapper.mapFrom(1, JsonFormat)).to.equal(1);
-            expect(mapper.mapFrom(new Number(2), JsonFormat)).to.equal(2);
-            expect(mapper.mapFrom(true, JsonFormat)).to.equal(true); 
-            expect(mapper.mapFrom(new Boolean(false), JsonFormat)).to.equal(false);           
-            expect(mapper.mapFrom("hello", JsonFormat)).to.equal("hello");
-            expect(mapper.mapFrom(String("goodbye"), JsonFormat)).to.equal("goodbye");
-            // expect(mapper.mapFrom(new Date(2016,11,6), JsonFormat)).to.equal("2016-12-06T06:00:00.000Z");
-            expect(mapper.mapFrom(/abc/, JsonFormat)).to.eql("/abc/");
+            expect(context.mapFrom(1, JsonFormat)).to.equal(1);
+            expect(context.mapFrom(new Number(2), JsonFormat)).to.equal(2);
+            expect(context.mapFrom(true, JsonFormat)).to.equal(true); 
+            expect(context.mapFrom(new Boolean(false), JsonFormat)).to.equal(false);           
+            expect(context.mapFrom("hello", JsonFormat)).to.equal("hello");
+            expect(context.mapFrom(String("goodbye"), JsonFormat)).to.equal("goodbye");
+            // expect(context.mapFrom(new Date(2016,11,6), JsonFormat)).to.equal("2016-12-06T06:00:00.000Z");
+            expect(context.mapFrom(/abc/, JsonFormat)).to.eql("/abc/");
         });
 
         it("should map to enum value", () => {
-            expect(mapper.mapFrom(Color.red, JsonFormat)).to.equal(1);
-            expect(mapper.mapFrom(Color.blue, JsonFormat)).to.equal(2);
-            expect(mapper.mapFrom(Color.green, JsonFormat)).to.equal(3);
+            expect(context.mapFrom(Color.red, JsonFormat)).to.equal(1);
+            expect(context.mapFrom(Color.blue, JsonFormat)).to.equal(2);
+            expect(context.mapFrom(Color.green, JsonFormat)).to.equal(3);
         });
         
         it("should map arrays of primitives", () => {
-            expect(mapper.mapFrom([1,2,3], JsonFormat)).to.eql([1,2,3]);
-            expect(mapper.mapFrom([false,true], JsonFormat)).to.eql([false,true]);
-            expect(mapper.mapFrom(["one","two"], JsonFormat)).to.eql(["one","two"]);
-            // expect(mapper.mapFrom([new Date(2016,11,6)], JsonFormat)).to.eql(["2016-12-06T06:00:00.000Z"]);
-            expect(mapper.mapFrom([/abc/], JsonFormat)).to.eql(["/abc/"]);
+            expect(context.mapFrom([1,2,3], JsonFormat)).to.eql([1,2,3]);
+            expect(context.mapFrom([false,true], JsonFormat)).to.eql([false,true]);
+            expect(context.mapFrom(["one","two"], JsonFormat)).to.eql(["one","two"]);
+            // expect(context.mapFrom([new Date(2016,11,6)], JsonFormat)).to.eql(["2016-12-06T06:00:00.000Z"]);
+            expect(context.mapFrom([/abc/], JsonFormat)).to.eql(["/abc/"]);
         });
         
         it("should map all properties", () => {
@@ -240,7 +239,7 @@ describe("JsonMapping", () => {
                       age:       23,
                       eyeColor:  Color.blue
                   }),
-                  json = mapper.mapFrom(person, JsonFormat);
+                  json = context.mapFrom(person, JsonFormat);
             expect(json).to.eql({
                 $type:     "Person",
                 firstName: "Christiano",
@@ -253,7 +252,7 @@ describe("JsonMapping", () => {
         it("should ignore some properties", () => {
             const person    = new Person();
             person.password = "1234";
-            const json      = mapper.mapFrom(person, JsonFormat);
+            const json      = context.mapFrom(person, JsonFormat);
             expect(json).to.eql({$type: "Person"});
         });
         
@@ -263,7 +262,7 @@ describe("JsonMapping", () => {
                       lastName:  "Ronaldo",
                       age:       23
                   }),
-                  json = mapper.mapFrom(person, JsonFormat, { spec: {lastName: true} });
+                  json = context.mapFrom(person, JsonFormat, { spec: {lastName: true} });
             expect(json).to.eql({
                 lastName: "Ronaldo"
             });
@@ -286,7 +285,7 @@ describe("JsonMapping", () => {
                           })
                       ]
                   });
-            const json = mapper.mapFrom(doctor, JsonFormat);
+            const json = context.mapFrom(doctor, JsonFormat);
             expect(json).to.eql({
                 $type:     "Doctor",
                 firstName: "Mitchell",
@@ -323,7 +322,7 @@ describe("JsonMapping", () => {
                           })
                       ]
                   });            
-            const json = mapper.mapFrom(doctor, JsonFormat, { spec: {
+            const json = context.mapFrom(doctor, JsonFormat, { spec: {
                 nurse: {
                     lastName: true,
                     age:      true
@@ -349,7 +348,7 @@ describe("JsonMapping", () => {
                       lastName:  "Ribery",
                       age:       32
                   }),
-                  json = mapper.mapFrom(wrapper, JsonFormat);
+                  json = context.mapFrom(wrapper, JsonFormat);
             expect(json).to.eql({
                 firstName: "Franck",
                 lastName:  "Ribery",
@@ -365,7 +364,7 @@ describe("JsonMapping", () => {
                           age:       32
                       })
                   }),
-                  json = mapper.mapFrom(wrapper, JsonFormat, {
+                  json = context.mapFrom(wrapper, JsonFormat, {
                       spec: { person: { age: true } }
                   });
             expect(json).to.eql({
@@ -379,7 +378,7 @@ describe("JsonMapping", () => {
                       lastName:  "Ribery",
                       age:       32
                   })],
-                  json = mapper.mapFrom(wrappers, JsonFormat);
+                  json = context.mapFrom(wrappers, JsonFormat);
             expect(json).to.eql([{
                 firstName: "Franck",
                 lastName:  "Ribery",
