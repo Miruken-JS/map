@@ -4,7 +4,7 @@ import { root, ignore } from "../src/map-metadata";
 import { JsonFormat, JsonMapping } from "../src/json-mapping";
 import { mapsFrom, mapsTo, format } from "../src/maps";
 import { expect } from "chai";
-import "../src/map-helper";
+import "../src/handler-map";
 
 const Color = Enum({red: 1, blue: 2, green: 3});
 

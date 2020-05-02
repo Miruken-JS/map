@@ -12,7 +12,7 @@ const mappingMetadataKey = Symbol();
 export const mapping = Metadata.decorator(mappingMetadataKey,
     (target, key, descriptor, mapping) => {
         if (!$isPlainObjet(mapping)) {
-            throw new TypeError("@mapping must be a simple object");
+            throw new TypeError("@mapping must be a simple object.");
         }
         if (!isDescriptor(descriptor)) {
             mapping = key;

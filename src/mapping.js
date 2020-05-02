@@ -19,49 +19,36 @@ import { $mapFrom, $mapTo } from "./maps";
  */
 const MapCallback = Abstract.extend(DispatchingCallback, {
     constructor(format, options) {
-        let _results  = [],
-            _promises = [],
-            _result;        
-        this.extend({
-            /**
-             * Gets the format to map.
-             * @property {Any} format
-             * @readOnly
-             */                                                
-            get format() { return format; },
-            /**
-             * Gets the mapping options.
-             * @property {Object} options
-             * @readOnly
-             */                                                
-            get options() { return options; },          
-            /**
-             * Gets/sets the effective callback result.
-             * @property {Any} callback result
-             */               
-            get callbackResult() {
-                if (_result === undefined) {
-                    _result = _promises.length == 0 ? _results[0]
-                            : Promise.all(_promises).then(() => _results[0]);
+        this._format   = format;
+        this._options  = options;
+        this._results  = [];
+        this._promises = [];
+    },                                              
+    get format() { return this._format; },                                              
+    get options() { return this._options; },             
+    get callbackResult() {
+        if (this._result === undefined) {
+            this._result = this._promises.length == 0 
+                         ? this._results[0]
+                         : Promise.all(this._promises)
+                            .then(() => this._results[0]);
+        }
+        return this._result;
+    },
+    set callbackResult(value) { this._result = value; },            
+    addResult(result) {
+        if (result == null) return;
+        if ($isPromise(result)) {
+            this._promises.push(result.then(res => {
+                if (res != null) {
+                    this._results.push(res);
                 }
-                return _result;
-            },
-            set callbackResult(value) { _result = value; },            
-            addResult(result) {
-                if (result == null) return;
-                if ($isPromise(result)) {
-                    _promises.push(result.then(res => {
-                        if (res != null) {
-                            _results.push(res);
-                        }
-                    }));
-                } else {
-                    _results.push(result);
-                }
-                _result = undefined;
-            }             
-        });
-    }
+            }));
+        } else {
+            this._results.push(result);
+        }
+        this._result = undefined;
+    }    
 });
 
 /**
@@ -76,26 +63,20 @@ const MapCallback = Abstract.extend(DispatchingCallback, {
 export const MapFrom = MapCallback.extend({
     constructor(object, format, options) {
         if ($isNothing(object)) {
-            throw new TypeError("Missing object to map");
+            throw new TypeError("Missing object to map.");
         }
         this.base(format, options);
-        this.extend({
-            /**
-             * Gets the target object to map.
-             * @property {Object} object
-             * @readOnly
-             */                                
-            get object() { return object; },         
-            dispatch(handler, greedy, composer) {
-                const target = this.object,
-                      source = $classOf(target);
-                if ($isNothing(source)) return false;
-                return $mapFrom.dispatch(handler, this, source,
-                    composer, false, this.addResult) !== $unhandled; 
-            }               
-        });      
-    },        
-    get policy() { return $$mapFrom; },
+        this._object = object;     
+    },                           
+    get object() { return this._object; },      
+    get policy() { return $mapFrom; },
+    dispatch(handler, greedy, composer) {
+        const target = this.object,
+              source = $classOf(target);
+        if ($isNothing(source)) return false;
+        return $mapFrom.dispatch(handler, this, source,
+            composer, false, this.addResult.bind(this)) !== $unhandled; 
+    },    
     toString() {
         return `MapFrom | ${this.object} to ${String(this.format)}`;
     }       
@@ -114,38 +95,25 @@ export const MapFrom = MapCallback.extend({
 export const MapTo = MapCallback.extend({
     constructor(value, format, classOrInstance, options) {
         if ($isNothing(value)) {
-            throw new TypeError("Missing value to map from");
+            throw new TypeError("Missing value to map from.");
         }        
         this.base(format, options);
         if ($isNothing(classOrInstance) && !$isString(value)) {
             classOrInstance = $classOf(value);
         }
-        this.extend({
-            /**
-             * Gets the formatted value.
-             * @property {Any} value
-             * @readOnly
-             */                                
-            get value() { return value; },
-            /**
-             * Gets the class or instance to unmap into.
-             * @property {Function|Object} classOrInstance
-             * @readOnly
-             */                                                
-            get classOrInstance() { return classOrInstance; },
-            dispatch(handler, greedy, composer) {
-                const source = this.classOrInstance || this.value;
-                return $mapTo.dispatch(handler, this, source,
-                    composer, false, this.addResult) !== $unhandled;
-            }             
-        });
+        this._value           = value;
+        this._classOrInstance = classOrInstance;
     },
-    /**
-     * Gets the policy.
-     * @property {Function} policy
-     * @readOnly
-     */         
-    get policy() { return $$mapTo; },
+                   
+    get value() { return this._value; },                                           
+    get classOrInstance() { return this._classOrInstance; },
+    get policy() { return $mapTo; },
+
+    dispatch(handler, greedy, composer) {
+        const source = this.classOrInstance || this.value;
+        return $mapTo.dispatch(handler, this, source,
+            composer, false, this.addResult.bind(this)) !== $unhandled;
+    },    
     toString() {
         return `MapTo | ${String(this.format)} ${this.value}`;
     }           

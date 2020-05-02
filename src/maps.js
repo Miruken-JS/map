@@ -11,7 +11,7 @@ const formatMetadataKey = Symbol();
  * Definition for mapping a value to a format.
  * @property {Function} $mapFrom
  */
-export const $mapFrom = $policy(Variance.Contravariant);
+export const $mapFrom = $policy(Variance.Contravariant, "mapFrom");
 
 export function mapsFrom(...args) {
     return decorate(addPolicy("mapFrom", $mapFrom, false, _filterFormat), args);
@@ -21,7 +21,7 @@ export function mapsFrom(...args) {
  * Definition for mapping from a formatted value.
  * @property {Function} $mapTo
  */
-export const $mapTo = $policy(Variance.Covariant);
+export const $mapTo = $policy(Variance.Covariant, "mapTo");
 
 export function mapsTo(...args) {
     return decorate(addPolicy("mapTo", $mapTo, false, _filterFormat), args);

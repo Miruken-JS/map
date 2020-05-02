@@ -3,7 +3,7 @@ import { NotHandledError } from "miruken-callback";
 import { Context } from "miruken-context";
 import { format } from "../src/maps";
 import { TypeMapping, TypeFormat, registerType } from "../src/type-mapping";
-import "../src/map-helper";
+import "../src/handler-map";
 
 import { expect } from "chai";
 
@@ -51,7 +51,7 @@ describe("Mapping", () => {
         it("should not map type string to Type if missing", () => {
             expect(() => {
                 context.mapTo("UpdateDetails", TypeFormat);
-            }).to.throw(NotHandledError, "UpdateDetails not handledcd");
+            }).to.throw(NotHandledError, "UpdateDetails not handled");
         });
 
         it("should fail if type string not passed to helper", () => {

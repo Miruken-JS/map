@@ -6,13 +6,12 @@ import { Handler } from "miruken-callback";
 import { mapsTo, format } from "./maps";
 
 export const TypeFormat = Symbol("type");
-
 export const TypeMapping = Handler.extend(format(TypeFormat));
 
 Handler.implement({
     getTypeFromString(typeString) {
         if (!$isString(typeString)) {
-            throw new Error(`Invalid type string '${typeString}'`);
+            throw new Error(`Invalid type string '${typeString}.'`);
         }
         const stripped = typeString.replace(/\s+/g, '');
         return this.mapTo(stripped, TypeFormat);
@@ -21,7 +20,7 @@ Handler.implement({
 
 export function registerType(target, key, descriptor) {
     if (isDescriptor(descriptor)) {
-        throw new SyntaxError("@registerType can only be applied to a class");
+        throw new SyntaxError("@registerType can only be applied to a class.");
     }
     const targetExtend = target.extend;
     if ($isFunction(targetExtend)) {
