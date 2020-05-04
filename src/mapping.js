@@ -3,7 +3,7 @@ import {
     $isPromise, $classOf
 } from "miruken-core";
 
-import { DispatchingCallback } from "miruken-callback";
+import { CallbackControl } from "miruken-callback";
 
 import { $mapFrom, $mapTo } from "./maps";
 
@@ -15,7 +15,7 @@ import { $mapFrom, $mapTo } from "./maps";
  * @param   {Object}  options  -  mapping options
  * @extends Base
  */
-const MapCallback = Abstract.extend(DispatchingCallback, {
+const MapCallback = Abstract.extend(CallbackControl, {
     constructor(format, options) {
         this._format   = format;
         this._options  = options;
