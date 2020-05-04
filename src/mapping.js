@@ -3,9 +3,7 @@ import {
     $isPromise, $classOf
 } from "miruken-core";
 
-import {
-     DispatchingCallback, $unhandled
-} from "miruken-callback";
+import { DispatchingCallback } from "miruken-callback";
 
 import { $mapFrom, $mapTo } from "./maps";
 
@@ -23,7 +21,8 @@ const MapCallback = Abstract.extend(DispatchingCallback, {
         this._options  = options;
         this._results  = [];
         this._promises = [];
-    },                                              
+    },
+
     get format() { return this._format; },                                              
     get options() { return this._options; },             
     get callbackResult() {
@@ -35,9 +34,10 @@ const MapCallback = Abstract.extend(DispatchingCallback, {
         }
         return this._result;
     },
-    set callbackResult(value) { this._result = value; },            
+    set callbackResult(value) { this._result = value; },
+
     addResult(result) {
-        if (result == null) return;
+        if ($isNothing(result)) return;
         if ($isPromise(result)) {
             this._promises.push(result.then(res => {
                 if (res != null) {
@@ -67,15 +67,17 @@ export const MapFrom = MapCallback.extend({
         }
         this.base(format, options);
         this._object = object;     
-    },                           
+    },
+
     get object() { return this._object; },      
-    get policy() { return $mapFrom; },
+    get callbackPolicy() { return $mapFrom; },
+    
     dispatch(handler, greedy, composer) {
         const target = this.object,
               source = $classOf(target);
         if ($isNothing(source)) return false;
         return $mapFrom.dispatch(handler, this, source,
-            composer, false, this.addResult.bind(this)) !== $unhandled; 
+            composer, false, this.addResult.bind(this)); 
     },    
     toString() {
         return `MapFrom | ${this.object} to ${String(this.format)}`;
@@ -95,7 +97,7 @@ export const MapFrom = MapCallback.extend({
 export const MapTo = MapCallback.extend({
     constructor(value, format, classOrInstance, options) {
         if ($isNothing(value)) {
-            throw new TypeError("Missing value to map from.");
+            throw new TypeError("Missing value to map.");
         }        
         this.base(format, options);
         if ($isNothing(classOrInstance) && !$isString(value)) {
@@ -107,12 +109,12 @@ export const MapTo = MapCallback.extend({
                    
     get value() { return this._value; },                                           
     get classOrInstance() { return this._classOrInstance; },
-    get policy() { return $mapTo; },
+    get callbackPolicy() { return $mapTo; },
 
     dispatch(handler, greedy, composer) {
         const source = this.classOrInstance || this.value;
         return $mapTo.dispatch(handler, this, source,
-            composer, false, this.addResult.bind(this)) !== $unhandled;
+            composer, false, this.addResult.bind(this));
     },    
     toString() {
         return `MapTo | ${String(this.format)} ${this.value}`;

@@ -1,5 +1,5 @@
 import { typeOf, $isFunction } from "miruken-core";
-import { Handler } from "miruken-callback";
+import { Handler, $unhandled } from "miruken-callback";
 import { mapsFrom, mapsTo } from "./maps";
 
 /**
