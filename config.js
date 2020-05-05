@@ -8,9 +8,9 @@ System.config({
 
   map: {
     "chai": "npm:chai@3.5.0",
-    "miruken-callback": "npm:miruken-callback@0.0.5-alpha.39",
-    "miruken-context": "npm:miruken-context@0.0.5-alpha.18",
-    "miruken-core": "npm:miruken-core@0.0.5-alpha.8",
+    "miruken-callback": "npm:miruken-callback@0.0.5-alpha.40",
+    "miruken-context": "npm:miruken-context@0.0.5-alpha.19",
+    "miruken-core": "npm:miruken-core@0.0.5-alpha.16",
     "github:jspm/nodelibs-assert@0.1.0": {
       "assert": "npm:assert@1.4.1"
     },
@@ -55,14 +55,14 @@ System.config({
     "npm:inherits@2.0.1": {
       "util": "github:jspm/nodelibs-util@0.1.0"
     },
-    "npm:miruken-callback@0.0.5-alpha.39": {
-      "miruken-core": "npm:miruken-core@0.0.5-alpha.8"
+    "npm:miruken-callback@0.0.5-alpha.40": {
+      "miruken-core": "npm:miruken-core@0.0.5-alpha.16"
     },
-    "npm:miruken-context@0.0.5-alpha.18": {
-      "miruken-callback": "npm:miruken-callback@0.0.5-alpha.39",
-      "miruken-core": "npm:miruken-core@0.0.5-alpha.8"
+    "npm:miruken-context@0.0.5-alpha.19": {
+      "miruken-callback": "npm:miruken-callback@0.0.5-alpha.40",
+      "miruken-core": "npm:miruken-core@0.0.5-alpha.16"
     },
-    "npm:miruken-core@0.0.5-alpha.8": {
+    "npm:miruken-core@0.0.5-alpha.16": {
       "reflect-metadata": "npm:reflect-metadata@0.1.13"
     },
     "npm:process@0.11.9": {

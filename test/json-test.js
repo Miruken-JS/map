@@ -1,10 +1,14 @@
-import { Base, Enum, design } from "miruken-core";
+import {
+    Base, Enum, design, createKeyChain 
+} from "miruken-core";
+
 import { Context } from "miruken-context";
 import { root, ignore } from "../src/map-metadata";
 import { JsonFormat, JsonMapping } from "../src/json-mapping";
 import { mapsFrom, mapsTo, format } from "../src/maps";
 import { expect } from "chai";
-import "../src/handler-map";
+
+const _ = createKeyChain();
 
 const Color = Enum({red: 1, blue: 2, green: 3});
 
@@ -17,8 +21,8 @@ const Person = Base.extend({
     password:  undefined,
     @design(Color)
     eyeColor:  undefined,
-    get hobbies() { return this._hobbies; },
-    set hobbies(value) { this._hobbies = value; }
+    get hobbies() { return _(this).hobbies; },
+    set hobbies(value) { _(this).hobbies = value; }
 });
 
 const Doctor = Person.extend({

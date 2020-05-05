@@ -1,11 +1,12 @@
 import {
     Abstract, $isString, $isNothing,
-    $isPromise, $classOf
+    $isPromise, $classOf, createKeyChain
 } from "miruken-core";
 
 import { CallbackControl } from "miruken-callback";
-
 import { $mapFrom, $mapTo } from "./maps";
+
+const _ = createKeyChain();
 
 /**
  * Base callback for mapping.
@@ -17,37 +18,37 @@ import { $mapFrom, $mapTo } from "./maps";
  */
 const MapCallback = Abstract.extend(CallbackControl, {
     constructor(format, options) {
-        this._format   = format;
-        this._options  = options;
-        this._results  = [];
-        this._promises = [];
+        _(this).format   = format;
+        _(this).options  = options;
+        _(this).results  = [];
+        _(this).promises = [];
     },
 
-    get format() { return this._format; },                                              
-    get options() { return this._options; },             
+    get format() { return _(this).format; },                                              
+    get options() { return _(this).options; },             
     get callbackResult() {
-        if (this._result === undefined) {
-            this._result = this._promises.length == 0 
-                         ? this._results[0]
-                         : Promise.all(this._promises)
-                            .then(() => this._results[0]);
+        if (_(this).result === undefined) {
+            _(this).result = _(this).promises.length == 0 
+                ? _(this).results[0]
+                : Promise.all(_(this).promises)
+                         .then(() => _(this).results[0]);
         }
-        return this._result;
+        return _(this).result;
     },
-    set callbackResult(value) { this._result = value; },
+    set callbackResult(value) { _(this).result = value; },
 
     addResult(result) {
         if ($isNothing(result)) return;
         if ($isPromise(result)) {
-            this._promises.push(result.then(res => {
+            _(this).promises.push(result.then(res => {
                 if (res != null) {
-                    this._results.push(res);
+                    _(this).results.push(res);
                 }
             }));
         } else {
-            this._results.push(result);
+            _(this).results.push(result);
         }
-        this._result = undefined;
+        _(this).result = undefined;
     }    
 });
 
@@ -66,10 +67,10 @@ export const MapFrom = MapCallback.extend({
             throw new TypeError("Missing object to map.");
         }
         this.base(format, options);
-        this._object = object;     
+        _(this).object = object;     
     },
 
-    get object() { return this._object; },      
+    get object() { return _(this).object; },      
     get callbackPolicy() { return $mapFrom; },
     
     dispatch(handler, greedy, composer) {
@@ -103,12 +104,12 @@ export const MapTo = MapCallback.extend({
         if ($isNothing(classOrInstance) && !$isString(value)) {
             classOrInstance = $classOf(value);
         }
-        this._value           = value;
-        this._classOrInstance = classOrInstance;
+        _(this).value           = value;
+        _(this).classOrInstance = classOrInstance;
     },
                    
-    get value() { return this._value; },                                           
-    get classOrInstance() { return this._classOrInstance; },
+    get value() { return _(this).value; },                                           
+    get classOrInstance() { return _(this).classOrInstance; },
     get callbackPolicy() { return $mapTo; },
 
     dispatch(handler, greedy, composer) {
