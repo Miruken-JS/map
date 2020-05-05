@@ -18,20 +18,21 @@ const _ = createKeyChain();
  */
 const MapCallback = Abstract.extend(CallbackControl, {
     constructor(format, options) {
-        _(this).format   = format;
-        _(this).options  = options;
-        _(this).results  = [];
-        _(this).promises = [];
+        const _this = _(this);
+        _this.format   = format;
+        _this.options  = options;
+        _this.results  = [];
+        _this.promises = [];
     },
 
     get format() { return _(this).format; },                                              
     get options() { return _(this).options; },             
     get callbackResult() {
         if (_(this).result === undefined) {
-            _(this).result = _(this).promises.length == 0 
-                ? _(this).results[0]
-                : Promise.all(_(this).promises)
-                         .then(() => _(this).results[0]);
+            const { results, promises }  = _(this);
+            _(this).result = promises.length == 0 
+                ? results[0]
+                : Promise.all(promises).then(() => results[0]);
         }
         return _(this).result;
     },
@@ -104,8 +105,9 @@ export const MapTo = MapCallback.extend({
         if ($isNothing(classOrInstance) && !$isString(value)) {
             classOrInstance = $classOf(value);
         }
-        _(this).value           = value;
-        _(this).classOrInstance = classOrInstance;
+        const _this = _(this);
+        _this.value           = value;
+        _this.classOrInstance = classOrInstance;
     },
                    
     get value() { return _(this).value; },                                           
