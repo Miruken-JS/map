@@ -2,7 +2,7 @@ import {
     Metadata, $isFunction, $isPlainObject, isDescriptor
 } from "miruken-core";
 
-const mappingMetadataKey = Symbol();
+const mappingMetadataKey = Symbol("mapping-metadata");
 
 /**
  * Maintains mapping information for a class or property

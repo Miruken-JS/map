@@ -1,9 +1,12 @@
 import {
-    Variance, Metadata, decorate,
-    $flatten, $equals, isDescriptor
+    Metadata, decorate, isDescriptor,
+    $flatten, $equals
 } from "miruken-core";
 
-import { $policy, addPolicy } from "miruken-callback";
+import { 
+    CovariantPolicy, ContravariantPolicy,
+    registerHandlers
+} from "miruken-callback";
 
 const formatMetadataKey = Symbol();
 
@@ -11,20 +14,20 @@ const formatMetadataKey = Symbol();
  * Definition for mapping a value to a format.
  * @property {Function} $mapFrom
  */
-export const $mapFrom = $policy(Variance.Contravariant, "mapFrom");
+export const $mapFrom = new ContravariantPolicy("mapFrom");
 
 export function mapsFrom(...args) {
-    return decorate(addPolicy("mapFrom", $mapFrom, false, _filterFormat), args);
+    return decorate(registerHandlers("mapsFrom", $mapFrom, false, _filterFormat), args);
 }
 
 /**
  * Definition for mapping from a formatted value.
  * @property {Function} $mapTo
  */
-export const $mapTo = $policy(Variance.Covariant, "mapTo");
+export const $mapTo = new CovariantPolicy("mapTo");
 
 export function mapsTo(...args) {
-    return decorate(addPolicy("mapTo", $mapTo, false, _filterFormat), args);
+    return decorate(registerHandlers("mapsTo", $mapTo, false, _filterFormat), args);
 }
 
 /**
