@@ -1,34 +1,24 @@
 import {
-    Metadata, decorate, isDescriptor,
-    $flatten, $equals
+    Metadata, isDescriptor, $flatten, $equals
 } from "miruken-core";
 
 import { 
-    CovariantPolicy, ContravariantPolicy,
-    registerHandlers
+    CovariantPolicy, ContravariantPolicy
 } from "miruken-callback";
 
 const formatMetadataKey = Symbol();
 
 /**
- * Definition for mapping a value to a format.
- * @property {Function} $mapFrom
- */
-export const $mapFrom = new ContravariantPolicy("mapFrom");
-
-export function mapsFrom(...args) {
-    return decorate(registerHandlers("mapsFrom", $mapFrom, false, _filterFormat), args);
-}
+ * Policy for mapping a value to a format.
+ * @property {Function} mapsFrom
+ */   
+export const mapsFrom = ContravariantPolicy.createDecorator("mapsFrom", false, _filterFormat);
 
 /**
- * Definition for mapping from a formatted value.
- * @property {Function} $mapTo
- */
-export const $mapTo = new CovariantPolicy("mapTo");
-
-export function mapsTo(...args) {
-    return decorate(registerHandlers("mapsTo", $mapTo, false, _filterFormat), args);
-}
+ * Policy for mapping from a formatted value.
+ * @property {Function} mapsTo
+ */   
+export const mapsTo = CovariantPolicy.createDecorator("mapsTo", false, _filterFormat);
 
 /**
  * Mapping formats.

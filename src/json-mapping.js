@@ -31,13 +31,13 @@ export const JsonMapping = AbstractMapping.extend(
         return mapsFrom.object.toString();
     },
     @mapsFrom(Array)
-    mapFromArray(mapsFrom, composer) {
+    mapFromArray(mapsFrom, { composer }) {
         const array   = mapsFrom.object,
               format  = mapsFrom.format,
               options = mapsFrom.options;
         return array.map(elem => composer.mapFrom(elem, format, options)); 
     },
-    mapsFrom(mapsFrom, composer) {
+    mapsFrom(mapsFrom, { composer }) {
         const object = mapsFrom.object;
         if (!_canMapJson(object)) { return; }
         if (this.isPrimitiveValue(object)) {
@@ -99,7 +99,7 @@ export const JsonMapping = AbstractMapping.extend(
         return new RegExp(fragments[1], fragments[2] || "")
     },
     @mapsTo(Array)
-    mapToArray(mapsTo, composer) {
+    mapToArray(mapsTo, { composer }) {
         const array   = mapsTo.value,
               format  = mapsTo.format,
               options = mapsTo.options;
@@ -107,7 +107,7 @@ export const JsonMapping = AbstractMapping.extend(
         type = Array.isArray(type) ? type[0] : undefined;
         return array.map(elem => composer.mapTo(elem, format, type, options)); 
     },        
-    mapsTo(mapsTo, composer) {
+    mapsTo(mapsTo, { composer }) {
         const value = mapsTo.value;
         if (!_canMapJson(value)) { return; }
         const classOrInstance = mapsTo.classOrInstance;

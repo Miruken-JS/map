@@ -4,7 +4,7 @@ import {
 } from "miruken-core";
 
 import { CallbackControl } from "miruken-callback";
-import { $mapFrom, $mapTo } from "./maps";
+import { mapsFrom, mapsTo } from "./maps";
 
 const _ = createKeyChain();
 
@@ -72,13 +72,13 @@ export const MapFrom = MapCallback.extend({
     },
 
     get object() { return _(this).object; },      
-    get callbackPolicy() { return $mapFrom; },
+    get callbackPolicy() { return mapsFrom.policy; },
     
     dispatch(handler, greedy, composer) {
         const target = this.object,
               source = $classOf(target);
         if ($isNothing(source)) return false;
-        return $mapFrom.dispatch(handler, this, source,
+        return mapsFrom.dispatch(handler, this, source,
             composer, false, this.addResult.bind(this)); 
     },    
     toString() {
@@ -112,11 +112,11 @@ export const MapTo = MapCallback.extend({
                    
     get value() { return _(this).value; },                                           
     get classOrInstance() { return _(this).classOrInstance; },
-    get callbackPolicy() { return $mapTo; },
+    get callbackPolicy() { return mapsTo.policy; },
 
     dispatch(handler, greedy, composer) {
         const source = this.classOrInstance || this.value;
-        return $mapTo.dispatch(handler, this, source,
+        return mapsTo.dispatch(handler, this, source,
             composer, false, this.addResult.bind(this));
     },    
     toString() {

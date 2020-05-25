@@ -9,12 +9,12 @@ import { mapsFrom, mapsTo } from "./maps";
  */        
 export const AbstractMapping = Handler.extend({
     @mapsFrom
-    mapsFrom(mapsFrom, composer) {
+    mapsFrom(mapsFrom, { composer }) {
         return $unhandled;
     },
 
     @mapsTo
-    mapsTo(mapsTo, composer) {
+    mapsTo(mapsTo, { composer }) {
     },
 
     canSetProperty(descriptor) {
