@@ -3,41 +3,48 @@ import {
 } from "miruken-core";
 
 import { Context } from "miruken-context";
-import { root, ignore } from "../src/map-metadata";
+import { root, ignore } from "../src/mapping";
+import { MapTo } from "../src/map-callback";
 import { JsonFormat, JsonMapping } from "../src/json-mapping";
 import { mapsFrom, mapsTo, format } from "../src/maps";
+import { TypeIdHandling, typeId } from "../src/type-mapping";
+
 import { expect } from "chai";
 
 const _ = createKeyChain();
 
 const Color = Enum({red: 1, blue: 2, green: 3});
 
-const Person = Base.extend({
-    $type:    "Person",
-    firstName: undefined,
-    lastName:  undefined,
-    age:       undefined,
+@typeId("Person")
+class Person extends Base {
+    firstName = undefined
+    lastName  = undefined
+    age       = undefined
+
     @ignore
-    password:  undefined,
+    password  = undefined
+
     @design(Color)
-    eyeColor:  undefined,
-    get hobbies() { return _(this).hobbies; },
+    eyeColor  = undefined
+
+    get hobbies() { return _(this).hobbies; }
     set hobbies(value) { _(this).hobbies = value; }
-});
+}
 
-const Doctor = Person.extend({
-    $type: "Doctor",
+@typeId("Doctor")
+class Doctor extends Person {
     @design(Person)
-    nurse: undefined,
-    @design([Person])
-    patients: undefined    
-});
+    nurse    = undefined
 
-const PersonWrapper = Base.extend({
+    @design([Person])
+    patients = undefined    
+}
+
+class PersonWrapper extends Base {
     @root                
     @design(Person)
-    person: undefined
-});
+    person = undefined
+}
 
 describe("JsonMapping", () => {
     let context;
@@ -92,7 +99,7 @@ describe("JsonMapping", () => {
                 firstName:  "David",
                 lastName:   "Beckham",
                 occupation: "soccer"
-            }, JsonFormat, Person, { dynamic: true });
+            }, JsonFormat, Person, MapTo.dynamic);
             expect(person).to.be.instanceOf(Person);
             expect(person.firstName).to.equal("David");
             expect(person.lastName).to.equal("Beckham");
@@ -115,7 +122,7 @@ describe("JsonMapping", () => {
                     occupation: "soccer",
                     age:         24
                 }]
-            }, JsonFormat, Doctor, { dynamic: true });
+            }, JsonFormat, Doctor, MapTo.dynamic);
             expect(doctor).to.be.instanceOf(Doctor);
             expect(doctor.firstName).to.equal("Mitchell");
             expect(doctor.lastName).to.equal("Moskowitz");
@@ -152,7 +159,7 @@ describe("JsonMapping", () => {
                      firstName:  "David",
                      lastName:   "Beckham",
                      occupation: "soccer"
-                  }], JsonFormat, [Person], { dynamic: true }),
+                  }], JsonFormat, [Person], MapTo.dynamic),
                   person = people[0];
             expect(person).to.be.instanceOf(Person);
             expect(person.firstName).to.equal("David");
@@ -165,7 +172,7 @@ describe("JsonMapping", () => {
                      firstName:  "David",
                      lastName:   "Beckham",
                      occupation: "soccer"
-                  }], JsonFormat, Person, { dynamic: true }),
+                  }], JsonFormat, Person, MapTo.dynamic),
                   person = people[0];
             expect(person).to.be.instanceOf(Person);
             expect(person.firstName).to.equal("David");
@@ -178,7 +185,7 @@ describe("JsonMapping", () => {
                     firstName:  "David",
                     lastName:   "Beckham",
                     occupation: "soccer"
-                  }, JsonFormat, PersonWrapper, { dynamic: true }),
+                  }, JsonFormat, PersonWrapper, MapTo.dynamic),
                   person = wrapper.person;
             expect(person).to.be.instanceOf(Person);
             expect(person.firstName).to.equal("David");
@@ -237,13 +244,14 @@ describe("JsonMapping", () => {
         });
         
         it("should map all properties", () => {
-            const person = new Person({
+            const person = new Person().extend({
                       firstName: "Christiano",
                       lastName:  "Ronaldo",
                       age:       23,
                       eyeColor:  Color.blue
                   }),
-                  json = context.mapFrom(person, JsonFormat);
+                  json = context.mapFrom(person, JsonFormat, o =>
+                      o.typeIdHandling = TypeIdHandling.Auto);
             expect(json).to.eql({
                 $type:     "Person",
                 firstName: "Christiano",
@@ -256,52 +264,56 @@ describe("JsonMapping", () => {
         it("should ignore some properties", () => {
             const person    = new Person();
             person.password = "1234";
-            const json      = context.mapFrom(person, JsonFormat);
+            const json      = context.mapFrom(person, JsonFormat, o =>
+                o.typeIdHandling = TypeIdHandling.Auto);
             expect(json).to.eql({$type: "Person"});
         });
         
         it("should map specific properties", () => {
-            const person = new Person({
+            const person = new Person().extend({
                       firstName: "Christiano",
                       lastName:  "Ronaldo",
                       age:       23
                   }),
-                  json = context.mapFrom(person, JsonFormat, { spec: {lastName: true} });
+                  json = context.mapFrom(person, JsonFormat, o => {
+                      o.fields         = { lastName: true };
+                      o.typeIdHandling = TypeIdHandling.Auto;
+                  });
             expect(json).to.eql({
+                $type:    "Person",
                 lastName: "Ronaldo"
             });
         });
         
         it("should map nested properties", () => {
-            const doctor = new Doctor({
+            const doctor = new Doctor().extend({
                       firstName: "Mitchell",
                       lastName:  "Moskowitz",
-                      nurse: new Person({
+                      nurse: new Person().extend({
                           firstName: "Clara",
                           lastName:  "Barton",
                           age:       36
                       }),
                       patients: [
-                          new Person({
+                          new Person().extend({
                               firstName: "Lionel",
                               lastName:  "Messi",
                               age:       24
                           })
                       ]
                   });
-            const json = context.mapFrom(doctor, JsonFormat);
+            const json = context.mapFrom(doctor, JsonFormat, o =>
+                o.typeIdHandling = TypeIdHandling.Auto);
             expect(json).to.eql({
                 $type:     "Doctor",
                 firstName: "Mitchell",
                 lastName:  "Moskowitz",
                 nurse: {
-                    $type:     "Person",
                     firstName: "Clara",
                     lastName:  "Barton",
                     age:       36
                 },
                 patients: [{
-                    $type:     "Person",
                     firstName: "Lionel",
                     lastName:  "Messi",
                     age:       24
@@ -309,36 +321,78 @@ describe("JsonMapping", () => {
             });
         });
 
-        it("should map specific nested properties", () => {
-            const doctor = new Doctor({
+        it("should emit type id for TypeIdHandling.Auto", () => {
+            const doctor = new Doctor().extend({
                       firstName: "Mitchell",
                       lastName:  "Moskowitz",
-                      nurse: new Person({
+                      nurse: new Doctor().extend({
                           firstName: "Clara",
                           lastName:  "Barton",
                           age:       36
                       }),
                       patients: [
-                          new Person({
+                          new Doctor().extend({
+                              firstName: "Louis",
+                              lastName:  "Pasteur",
+                              age:       24
+                          })
+                      ]
+                  });
+            const json = context.mapFrom(doctor, JsonFormat, o =>
+                o.typeIdHandling = TypeIdHandling.Auto);
+            expect(json).to.eql({
+                $type:     "Doctor",
+                firstName: "Mitchell",
+                lastName:  "Moskowitz",
+                nurse: {
+                    $type:     "Doctor",
+                    firstName: "Clara",
+                    lastName:  "Barton",
+                    age:       36
+                },
+                patients: [{
+                    $type:     "Doctor",
+                    firstName: "Louis",
+                    lastName:  "Pasteur",
+                    age:       24
+                }]
+            });
+        });
+
+        it("should map specific nested properties", () => {
+            const doctor = new Doctor().extend({
+                      firstName: "Mitchell",
+                      lastName:  "Moskowitz",
+                      nurse: new Person().extend({
+                          firstName: "Clara",
+                          lastName:  "Barton",
+                          age:       36
+                      }),
+                      patients: [
+                          new Person().extend({
                               firstName: "Lionel",
                               lastName:  "Messi",
                               age:       24
                           })
                       ]
                   });            
-            const json = context.mapFrom(doctor, JsonFormat, { spec: {
-                nurse: {
-                    lastName: true,
-                    age:      true
-                },
-                patients: {
-                    firstName: true
-                }}
+            const json = context.mapFrom(doctor, JsonFormat, o => {
+                o.fields = {
+                    nurse: {
+                        lastName:  true,
+                        age:       true
+                    },
+                    patients: {
+                        firstName: true
+                    }
+                };
+                o.typeIdHandling = TypeIdHandling.Auto
             });
             expect(json).to.eql({
+                $type: "Doctor",
                 nurse: {
-                    lastName:  "Barton",
-                    age:       36
+                    lastName: "Barton",
+                    age:      36
                 },
                 patients: [{
                     firstName: "Lionel",
@@ -347,7 +401,7 @@ describe("JsonMapping", () => {
         });
 
         it("should map rooted properties", () => {
-            const wrapper = new PersonWrapper({
+            const wrapper = new PersonWrapper().extend({
                       firstName: "Franck",
                       lastName:  "Ribery",
                       age:       32
@@ -361,23 +415,42 @@ describe("JsonMapping", () => {
         });
 
         it("should map specific rooted properties", () => {
-            const wrapper = new PersonWrapper({
-                      person: new Person({
+            const wrapper = new PersonWrapper().extend({
+                      person: new Person().extend({
                           firstName: "Franck",
                           lastName:  "Ribery",
                           age:       32
                       })
                   }),
-                  json = context.mapFrom(wrapper, JsonFormat, {
-                      spec: { person: { age: true } }
+                  json = context.mapFrom(wrapper, JsonFormat, o => {
+                      o.fields = { person: { age: true } };
+                      o.typeIdHandling = TypeIdHandling.Auto
                   });
             expect(json).to.eql({
                 age: 32
             });
         });
 
+        it("should emit type if for rooted properties", () => {
+            const wrapper = new PersonWrapper().extend({
+                      person: new Doctor().extend({
+                          firstName: "William",
+                          lastName:  "Harvey",
+                          age:       55
+                      })
+                  }),
+                  json = context.mapFrom(wrapper, JsonFormat, o => {
+                      o.fields = { person: { age: true } };
+                      o.typeIdHandling = TypeIdHandling.Auto
+                  });
+            expect(json).to.eql({
+                $type: "Doctor",
+                age:   55
+            });
+        });
+
         it("should map arrays", () => {
-            const wrappers = [new PersonWrapper({
+            const wrappers = [new PersonWrapper().extend({
                       firstName: "Franck",
                       lastName:  "Ribery",
                       age:       32

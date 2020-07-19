@@ -1,5 +1,5 @@
 import {
-    Metadata, isDescriptor, $flatten, $equals
+    Metadata, $isNothing, $equals
 } from "miruken-core";
 
 import { 
@@ -27,12 +27,11 @@ export const mapsTo = CovariantPolicy.createDecorator("mapsTo", false, _filterFo
  */
 export const format = Metadata.decorator(formatMetadataKey,
     (target, key, descriptor, formats) => {
-        const property = isDescriptor(descriptor);
-        formats = $flatten(property ? formats : key);
-        if (formats.length === 0) { return; }
-        const metadata = property
-            ? Metadata.getOrCreateOwn(formatMetadataKey, target, key, () => new Set())
-            : Metadata.getOrCreateOwn(formatMetadataKey, target.prototype, () => new Set());
+        formats = formats.flat();
+        if (formats.length === 0) return;
+        const metadata = $isNothing(descriptor)
+            ? format.getOrCreateOwn(target.prototype, () => new Set())
+            : format.getOrCreateOwn(target, key, () => new Set());
         formats.forEach(format => metadata.add(format));
     });
 

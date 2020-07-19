@@ -1,22 +1,26 @@
 import { $isNothing, $isFunction } from "miruken-core";
 import { Handler, NotHandledError } from "miruken-callback";
-import { MapTo, MapFrom } from "./mapping";
+import { MapTo, MapFrom } from "./map-callback";
 
 Handler.implement({
     /**
      * Maps the `object` to a value in `format`.
      * @method mapFrom
-     * @param   {Object}  object   -  object to map
-     * @param   {Any}     format   -  format specifier
-     * @param   {Object}  options  -  mapping options
+     * @param   {Object}    object     -  object to map
+     * @param   {Any}       format     -  format specifier
+     * @param   {Function}  configure  -  configure options
      * @returns {Any}  mapped value.
      * @for Handler
      */
-    mapFrom(object, format, options) {
+    mapFrom(object, format, configure) {
         if ($isNothing(object)) {
-            throw new TypeError("Missing object to map.");
+            throw new TypeError("The object argument is required.");
         }
-        const mapFrom = new MapFrom(object, format, options);
+        if (!$isNothing(configure) && !$isFunction(configure)) {
+            throw new TypeError("The configure argument is not a function.");
+        }
+        const mapFrom = new MapFrom(object, format);
+        configure?.(mapFrom);
         if (!this.handle(mapFrom)) {
             throw new NotHandledError(mapFrom);
         }
@@ -25,16 +29,19 @@ Handler.implement({
     /**
      * Maps the formatted `value` in `format` to `classOrInstance`.
      * @method mapTo 
-     * @param   {Any}  value       -  formatted value
-     * @param   {Any}  format      -  format specifier
-     * @param   {Function|Object}  -  instance or class to unmap
-     * @param   {Object}  options  -  mapping options
+     * @param   {Any}              value            -  formatted value
+     * @param   {Any}              format           -  format specifier
+     * @param   {Function|Object}  classOrInstance  -  instance or class to unmap
+     * @param   {Function}         configure        -  configure options
      * @return  {Object}  unmapped instance.
      * @for Handler
      */    
-    mapTo(value, format, classOrInstance, options) {
+    mapTo(value, format, classOrInstance, configure) {
         if ($isNothing(value)) {
-            throw new TypeError("Missing value to map from.");
+             throw new TypeError("The object argument is required.");
+        }
+        if (!$isNothing(configure) && !$isFunction(configure)) {
+            throw new TypeError("The configure argument is not a function.");
         }
         if (Array.isArray(classOrInstance)) {
             const type = classOrInstance[0];
@@ -44,11 +51,11 @@ Handler.implement({
         } else if (Array.isArray(value) && $isFunction(classOrInstance)) {
             classOrInstance = [classOrInstance];
         }
-        const mapTo = new MapTo(value, format, classOrInstance, options);
+        const mapTo = new MapTo(value, format, classOrInstance);
+        configure?.(mapTo);
         if (!this.handle(mapTo)) {
             throw new NotHandledError(mapTo);
         }
         return mapTo.callbackResult; 
     }    
 });
-

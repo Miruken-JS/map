@@ -4,7 +4,8 @@ import {
     getPropertyDescriptors, emptyArray
 } from "miruken-core";
 
-import { mapping } from "./map-metadata";
+import { mapping } from "./mapping";
+import { TypeIdHandling, getTypeId } from "./type-mapping";
 import { AbstractMapping } from "./abstract-mapping";
 import { mapsFrom, mapsTo, format } from "./maps";
 
@@ -12,139 +13,168 @@ import { mapsFrom, mapsTo, format } from "./maps";
  * Javascript Object Notation
  * @property {Any} JsonFormat
  */
-export const JsonFormat      = Symbol("json"),
-             JsonContentType = "application/json";
+export const JsonFormat        = Symbol("json"),
+             JsonContentType   = "application/json",
+             DefaultTypeIdProp = "$type";
 
 /**
  * Handler for performing mapping to javascript object.
  * @class JsonMapping
  * @extends AbstractMapping
  */
-export const JsonMapping = AbstractMapping.extend(
-    format(JsonFormat, JsonContentType), {
+@format(JsonFormat, JsonContentType)
+export class JsonMapping extends AbstractMapping {
     @mapsFrom(Date)
-    mapFromDate(mapsFrom) {
-        return mapsFrom.object.toJSON();
-    },
+    mapFromDate(mapFrom) {
+        return mapFrom.object.toJSON();
+    }
+
     @mapsFrom(RegExp)
-    mapFromRegExp(mapsFrom) {
-        return mapsFrom.object.toString();
-    },
+    mapFromRegExp(mapFrom) {
+        return mapFrom.object.toString();
+    }
+
     @mapsFrom(Array)
-    mapFromArray(mapsFrom, { composer }) {
-        const array   = mapsFrom.object,
-              format  = mapsFrom.format,
-              options = mapsFrom.options;
-        return array.map(elem => composer.mapFrom(elem, format, options)); 
-    },
-    mapsFrom(mapsFrom, { composer }) {
-        const object = mapsFrom.object;
-        if (!_canMapJson(object)) { return; }
+    mapFromArray(mapFrom, { composer }) {
+        const array     = mapFrom.object,
+              format    = mapFrom.format,
+              configure = mapFrom.copyOptions.bind(mapFrom);
+        return array.map(elem => composer.mapFrom(elem, format, configure)); 
+    }
+    
+    mapsFrom(mapFrom, { composer }) {
+        const object = mapFrom.object;
+        if (!canMapJson(object)) return;
         if (this.isPrimitiveValue(object)) {
-            return object && object.valueOf();
+            return object?.valueOf();
         }
-        const format  = mapsFrom.format,
-              options = mapsFrom.options,
-              spec    = options && options.spec,
-              raw     = $isPlainObject(object),
-              all     = !$isPlainObject(spec);              
+
+        const fields    = mapFrom.fields,
+              raw       = $isPlainObject(object),
+              allFields = $isNothing(fields) || fields === true;  
+        if (!(allFields || $isPlainObject(fields))) return {};
+
         if (raw || $isFunction(object.toJSON)) {
             const json = raw ? object : object.toJSON();
-            if (!all) {
+            if (!allFields) {
                 const j = {};
-                for (let k in spec) j[k] = json[k];
+                for (let k in fields) j[k] = json[k];
                 return j;
             }
             return json;
         }
+
         const descriptors = getPropertyDescriptors(object),
-              json        = {};
+              { format, type, typeIdHandling } = mapFrom,
+              json = {};
+
+        if (shouldEmitTypeId(object, type, typeIdHandling)) {
+            const typeId = getTypeId(object);
+            if (!$isNothing(typeId)) {
+                const type = object.constructor,
+                typeIdProp = mapping.get(type)?.typeIdProperty 
+                          || DefaultTypeIdProp;
+                json[typeIdProp] = typeId;
+            }
+        }
+
         Reflect.ownKeys(descriptors).forEach(key => {
-            if (all || (key in spec)) {
+            if (allFields || (key in fields)) {
                 let keyValue = object[key];
-                if (keyValue === undefined) { return; }
-                const map     = mapping.get(object, key),
-                      keySpec = all ? spec : spec[key];
-                if (!(all || keySpec) || (map && map.ignore)) {
-                    return;
-                }
-                const keyOptions = keySpec ? Object.create(options, {
-                    spec: { value: keySpec }
-                }) : options;
-                if (!_canMapJson(keyValue)) { return; }
+                if (!canMapJson(keyValue)) return;
+                const map = mapping.get(object, key);
+                if (map?.ignore) return;
                 if (this.isPrimitiveValue(keyValue)) {
-                    json[key] = keyValue && keyValue.valueOf();
+                    json[key] = keyValue?.valueOf();
                     return;
                 }
-                const keyJson = composer.mapFrom(keyValue, format, keyOptions);
-                if (map && map.root) {
+                let keyFields;
+                if (!allFields) {
+                    keyFields = fields[key];
+                    if (keyFields === false) return;
+                    if (!$isPlainObject(keyFields)) {
+                        keyFields = undefined;
+                    }
+                }
+                const keyJson = composer.mapFrom(keyValue, format, m => {
+                    m.fields         = keyFields;
+                    m.typeIdHandling = typeIdHandling;
+                    if (typeIdHandling === TypeIdHandling.Auto) {
+                        m.type = design.get(object, key)?.propertyType?.type;
+                    }
+                });
+                if (map?.root) {
                     Object.assign(json, keyJson);
                 } else {                 
                     json[key] = keyJson;
                 }
             }
         });
+
         return json;
-    },
+    }
 
     @mapsTo(Date)
-    mapToDate(mapsTo) {
-        const date = mapsTo.value;
+    mapToDate(mapTo) {
+        const date = mapTo.value;
         return instanceOf(date, Date) ? date : Date.parse(date);
-    },
+    }
+
     @mapsTo(RegExp)
-    mapToRegExp(mapsTo) {
-        const pattern   = mapsTo.value,
+    mapToRegExp(mapTo) {
+        const pattern   = mapTo.value,
               fragments = pattern.match(/\/(.*?)\/([gimy])?$/);              
         return new RegExp(fragments[1], fragments[2] || "")
-    },
+    }
+
     @mapsTo(Array)
-    mapToArray(mapsTo, { composer }) {
-        const array   = mapsTo.value,
-              format  = mapsTo.format,
-              options = mapsTo.options;
-        let type = mapsTo.classOrInstance;
+    mapToArray(mapTo, { composer }) {
+        const array     = mapTo.value,
+              format    = mapTo.format,
+              configure = mapTo.copyOptions.bind(mapTo);
+        let type = mapTo.classOrInstance;
         type = Array.isArray(type) ? type[0] : undefined;
-        return array.map(elem => composer.mapTo(elem, format, type, options)); 
-    },        
-    mapsTo(mapsTo, { composer }) {
-        const value = mapsTo.value;
-        if (!_canMapJson(value)) { return; }
-        const classOrInstance = mapsTo.classOrInstance;
+        return array.map(elem => composer.mapTo(elem, format, type, configure)); 
+    }
+
+    mapsTo(mapTo, { composer }) {
+        const { value, classOrInstance} = mapTo;
+        if (!canMapJson(value)) return;
         if (this.isPrimitiveValue(value)) {
-            return classOrInstance && classOrInstance.prototype instanceof Enum
+            return classOrInstance?.prototype instanceof Enum
                  ? classOrInstance.fromValue(value)
                  : value;
         }
-        if ($isNothing(classOrInstance)) { return; }
-        const format  = mapsTo.format,
-              options = mapsTo.options,
-              object  = $isFunction(classOrInstance)
-                      ? Reflect.construct(classOrInstance, emptyArray)
-                      : classOrInstance;
-        const dynamic     = options && options.dynamic,
-              ignoreCase  = options && options.ignoreCase,
-              descriptors = getPropertyDescriptors(object);
+        if ($isNothing(classOrInstance)) return;
+
+        const { format, dynamic, ignoreCase } = mapTo,
+              object      = $isFunction(classOrInstance)
+                          ? Reflect.construct(classOrInstance, emptyArray)
+                          : classOrInstance,
+              descriptors = getPropertyDescriptors(object),
+              copyOptions = mapTo.copyOptions.bind(mapTo);
+
         Reflect.ownKeys(descriptors).forEach(key => {
             const descriptor = descriptors[key];
             if (this.canSetProperty(descriptor)) {
                 const map = mapping.get(object, key);
-                if (map && map.root) {
-                    object[key] = _mapFromJson(object, key, value, composer, format, options);
+                if (map?.root) {
+                    object[key] = mapFromJson(object, key, value, composer, format, copyOptions);
                 }
             }
         });
+
         for (let key in value) {
             const descriptor = descriptors[key];
             let   map        = mapping.get(object, key);
-            if (map && (map.root || map.ignore)) {
+            if (map?.root || map?.ignore) {
                 continue;  // ignore or already rooted
             }
             const keyValue = value[key];
-            if (keyValue === undefined) { continue; }
+            if (keyValue === undefined) continue;
             if (descriptor) {
                 if (this.canSetProperty(descriptor)) {
-                    object[key] = _mapFromJson(object, key, keyValue, composer, format, options);
+                    object[key] = mapFromJson(object, key, keyValue, composer, format, copyOptions);
                 }
             } else {
                 const lkey  = key.toLowerCase();
@@ -152,7 +182,7 @@ export const JsonMapping = AbstractMapping.extend(
                 for (let k in descriptors) {
                     if (k.toLowerCase() === lkey) {
                         if (this.canSetProperty(descriptors[k])) {                        
-                            object[k] = _mapFromJson(object, k, keyValue, composer, format, options);
+                            object[k] = mapFromJson(object, k, keyValue, composer, format, copyOptions);
                         }
                         found = true;
                         break;
@@ -163,15 +193,22 @@ export const JsonMapping = AbstractMapping.extend(
                 }
             }
         }
+
         return object;
     }
-});
+}
 
-function _canMapJson(value) {
+function canMapJson(value) {
     return value !== undefined && !$isFunction(value) && !$isSymbol(value);
 }
 
-function _mapFromJson(target, key, value, composer, format, options) {
-    const type = design.get(target, key);
-    return composer.mapTo(value, format, type, options);
+function shouldEmitTypeId(object, type, typeIdHandling) {
+    return typeIdHandling === TypeIdHandling.Always ||
+           (typeIdHandling === TypeIdHandling.Auto  &&
+            object.constructor !== type);
+}
+
+function mapFromJson(target, key, value, composer, format, configure) {
+    const type = design.get(target, key)?.propertyType?.type;
+    return composer.mapTo(value, format, type, configure);
 }

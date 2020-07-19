@@ -7,19 +7,19 @@ import { mapsFrom, mapsTo } from "./maps";
  * @class Abstract mapping
  * @extends Handler
  */        
-export const AbstractMapping = Handler.extend({
+export class AbstractMapping extends Handler {
     @mapsFrom
-    mapsFrom(mapsFrom, { composer }) {
+    mapsFrom(mapsFrom) {
         return $unhandled;
-    },
+    }
 
     @mapsTo
-    mapsTo(mapsTo, { composer }) {
-    },
+    mapsTo(mapsTo) {}
 
     canSetProperty(descriptor) {
         return !$isFunction(descriptor.value);        
-    },
+    }
+
     isPrimitiveValue(value) {
         switch (typeOf(value)) {
             case "null":
@@ -30,4 +30,4 @@ export const AbstractMapping = Handler.extend({
         }
         return false;        
     }
-});
+}
