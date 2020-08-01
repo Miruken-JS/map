@@ -5,17 +5,20 @@ import {
 } from "miruken-core";
 
 import { mapping } from "./mapping";
-import { TypeIdHandling, getTypeId } from "./type-mapping";
 import { AbstractMapping } from "./abstract-mapping";
 import { mapsFrom, mapsTo, format } from "./maps";
+
+import { 
+    TypeIdHandling, TypeIdFormat, typeInfo, getTypeId
+} from "./type-mapping";
 
 /**
  * Javascript Object Notation
  * @property {Any} JsonFormat
  */
-export const JsonFormat        = Symbol("json"),
-             JsonContentType   = "application/json",
-             DefaultTypeIdProp = "$type";
+export const JsonFormat            = Symbol("json"),
+             JsonContentType       = "application/json",
+             DefaultTypeIdProperty = "$type";
 
 /**
  * Handler for performing mapping to javascript object.
@@ -72,8 +75,8 @@ export class JsonMapping extends AbstractMapping {
             const typeId = getTypeId(object);
             if (!$isNothing(typeId)) {
                 const type = object.constructor,
-                typeIdProp = mapping.get(type)?.typeIdProperty 
-                          || DefaultTypeIdProp;
+                typeIdProp = typeInfo.get(type)?.typeIdProperty 
+                          || DefaultTypeIdProperty;
                 json[typeIdProp] = typeId;
             }
         }
@@ -148,9 +151,7 @@ export class JsonMapping extends AbstractMapping {
         if ($isNothing(classOrInstance)) return;
 
         const { format, dynamic, ignoreCase } = mapTo,
-              object      = $isFunction(classOrInstance)
-                          ? Reflect.construct(classOrInstance, emptyArray)
-                          : classOrInstance,
+              object      = createInstance(value, classOrInstance, composer),
               descriptors = getPropertyDescriptors(object),
               copyOptions = mapTo.copyOptions.bind(mapTo);
 
@@ -206,6 +207,24 @@ function shouldEmitTypeId(object, type, typeIdHandling) {
     return typeIdHandling === TypeIdHandling.Always ||
            (typeIdHandling === TypeIdHandling.Auto  &&
             object.constructor !== type);
+}
+
+function createInstance(value, classOrInstance, composer) {
+    const isClass        = $isFunction(classOrInstance),
+          type           = isClass ? classOrInstance : classOrInstance.constructor,
+          typeIdProperty = typeInfo.get(type) || DefaultTypeIdProperty,
+          typeId         = value[typeIdProperty];
+    if ($isNothing(typeId)) {
+        return isClass ? Reflect.construct(type, emptyArray) : classOrInstance;
+    }
+    const desiredType = composer.mapTo(typeId, TypeIdFormat);
+    if (isClass) {
+        return Reflect.construct(desiredType, emptyArray)
+    }
+    if (!(classOrInstance instanceof desiredType)) {
+        throw new TypeError(`Expected instance of type ${desiredType.name}, but received ${type.name}.`);
+    }
+    return classOrInstance;
 }
 
 function mapFromJson(target, key, value, composer, format, configure) {

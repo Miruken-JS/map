@@ -7,7 +7,9 @@ import { root, ignore } from "../src/mapping";
 import { MapTo } from "../src/map-callback";
 import { JsonFormat, JsonMapping } from "../src/json-mapping";
 import { mapsFrom, mapsTo, format } from "../src/maps";
-import { TypeIdHandling, typeId } from "../src/type-mapping";
+import { 
+    TypeIdHandling, TypeMapping, typeId, typeInfo
+} from "../src/type-mapping";
 
 import { expect } from "chai";
 
@@ -50,7 +52,7 @@ describe("JsonMapping", () => {
     let context;
     beforeEach(() => {
         context = new Context();
-        context.addHandlers(new JsonMapping());
+        context.addHandlers(new JsonMapping(), new TypeMapping());
     });
     
     describe("#mapTo", () => {
@@ -106,6 +108,19 @@ describe("JsonMapping", () => {
             expect(person.occupation).to.equal("soccer");
         });
 
+        it("should use type id to parse json", () => {
+            const person = context.mapTo({
+                $type:      "Doctor",
+                firstName:  "Daniel",
+                lastName:   "Worrell",
+                occupation: "Orthopedic"
+            }, JsonFormat, Person, MapTo.dynamic);
+            expect(person).to.be.instanceOf(Doctor);
+            expect(person.firstName).to.equal("Daniel");
+            expect(person.lastName).to.equal("Worrell");
+            expect(person.occupation).to.equal("Orthopedic");
+        });
+
         it("should map all related from json", () => {
             const doctor = context.mapTo({
                 firstName: "Mitchell",
@@ -135,6 +150,42 @@ describe("JsonMapping", () => {
             expect(doctor.patients[0].firstName).to.equal("Lionel");
             expect(doctor.patients[0].lastName).to.equal("Messi");
             expect(doctor.patients[0].age).to.equal(24);
+        });
+
+        it("should map all related from json using type id", () => {
+            const doctor = context.mapTo({
+                firstName: "Mitchell",
+                lastName:  "Moskowitz",
+                hobbies:   ["golf", "cooking", "reading"],
+                nurse: {
+                    $type:      "Doctor",
+                    firstName:  "Clara",
+                    lastName:   "Barton",
+                    occupation: "Red Cross",
+                    age:         36
+                },                
+                patients: [{
+                    $type:      "Doctor",
+                    firstName:  "Louis",
+                    lastName:   "Pasteur",
+                    occupation: "Biologist",
+                    age:         75
+                }]
+            }, JsonFormat, Doctor, MapTo.dynamic);
+            expect(doctor).to.be.instanceOf(Doctor);
+            expect(doctor.firstName).to.equal("Mitchell");
+            expect(doctor.lastName).to.equal("Moskowitz");
+            expect(doctor.hobbies).to.eql(["golf", "cooking", "reading"]);
+            expect(doctor.nurse).to.be.instanceOf(Doctor);
+            expect(doctor.nurse.firstName).to.equal("Clara");
+            expect(doctor.nurse.lastName).to.equal("Barton");
+            expect(doctor.nurse.occupation).to.equal("Red Cross");
+            expect(doctor.nurse.age).to.equal(36);
+            expect(doctor.patients[0]).to.be.instanceOf(Doctor);
+            expect(doctor.patients[0].firstName).to.equal("Louis");
+            expect(doctor.patients[0].lastName).to.equal("Pasteur");
+            expect(doctor.patients[0].occupation).to.equal("Biologist");
+            expect(doctor.patients[0].age).to.equal(75);
         });
 
         it("should map all related from json ignoring case", () => {
@@ -207,6 +258,14 @@ describe("JsonMapping", () => {
             expect(+date).to.equal(+(new Date(2016,11,10)));
         });
         */
+
+        it("should fail if type id mismatch", () => {
+            expect(() => {
+                context.mapTo({
+                    $type: "Doctor"
+                }, JsonFormat, new Person(), MapTo.dynamic);                         
+            }).to.throw(TypeError, "Expected instance of type Doctor, but received Person.");
+        });
     });
 
     describe("#mapFrom", () => {
@@ -475,6 +534,34 @@ describe("JsonMapping", () => {
                   json = override.mapFrom(new Date(2016,11,10), JsonFormat);
             expect(json).to.equal(1481349600000);
         });
-        */        
+        */
+
+        describe("@typeInfo", () => {
+            it("should specify type id property", () => {
+                @typeId("Dog")
+                @typeInfo("@typeId")
+                class Dog {}
+                const json = context.mapFrom(new Dog(), JsonFormat, o =>
+                    o.typeIdHandling = TypeIdHandling.Auto);
+                expect(json).to.eql({"@typeId": "Dog"});
+            });
+
+            it("should inherit type id property", () => {
+                @typeInfo("@typeId")
+                class Animal {}
+                @typeId("Rabbit")
+                class Rabbit extends Animal {}
+                const json = context.mapFrom(new Rabbit(), JsonFormat, o =>
+                    o.typeIdHandling = TypeIdHandling.Auto);
+                expect(json).to.eql({"@typeId": "Rabbit"});
+            });
+
+            it("should fail invalid type id property", () => {
+                expect(() => {
+                    @typeInfo(22)
+                    class BadTypeInfo {}                            
+                }).to.throw(Error, "The type id property '22' is not valid.");
+            });
+        });     
     });
 });

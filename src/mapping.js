@@ -3,10 +3,10 @@ import {
     $isPlainObject
 } from "miruken-core";
 
-const mappingMetadataKey = Symbol("mapping-metadata");
+const mappingMetadataKey  = Symbol("mapping-metadata");
 
 /**
- * Maintains mapping information for a class or property
+ * Maintains mapping information for a class or property.
  * @method mapping
  * @param  {Object}  mapping  -  member mapping
  */  
@@ -33,4 +33,3 @@ export function root(target, key, descriptor) {
 export function ignore(target, key, descriptor) {
     mapping.getOrCreateOwn(target, key, () => ({})).ignore = true;
 }
-

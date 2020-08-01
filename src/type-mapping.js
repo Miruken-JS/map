@@ -1,6 +1,6 @@
 import {
-    Enum, decorate, $isNothing,
-    $isFunction, $isString
+    Enum, Metadata, decorate,
+    $isNothing, $isFunction, $isString
 } from "miruken-core";
 
 import { Handler } from "miruken-callback";
@@ -12,7 +12,9 @@ export const TypeIdFormat = Symbol("type");
 @format(TypeIdFormat)
 export class TypeMapping extends Handler {}
 
-const TypeIdResolver = Symbol("type-id");
+const TypeIdResolver      = Symbol("type-id"),
+      typeInfoMetadataKey = Symbol("type-info-metadata");
+
 
 export const TypeIdHandling = Enum({
     None:   0,  // Never
@@ -23,45 +25,64 @@ export const TypeIdHandling = Enum({
 export function typeId(...args) {
     return decorate((target, key, descriptor, args) => {
         if ($isNothing(descriptor)) {
-            const [id = target.name, property] = args,
-                  strippedId = id.replace(/\s+/g, '');          
-            if (id === "_class") {
-                throw new Error("The type id cannot be inferred from a base2 class.  Please specify it explicitly.");
-            }
-            if (!$isNothing(property)) {
-                const options = mapping.getOrCreateOwn(target, () => ({}));
-                options.typeIdProperty = property;
+            let [id] = args;
+            if ($isNothing(id) || id === "") {
+                id = target.name;
+                if (id === "_class") {
+                    throw new Error("@typeId cannot be inferred from a base2 class.  Please specify it explicitly.");
+                }
+            } else if (!$isString(id)) {
+                throw new SyntaxError("@typeId expects a string identifier.");
+            } else {
+                id = id.replace(/\s+/g, '')
             }
             Object.defineProperty(target, TypeIdResolver, {
                 configurable: false,
                 enumerable:   false,
-                value:        strippedId
+                value:        id
             });
             Object.defineProperty(target.prototype, TypeIdResolver, {
                 configurable: false,
                 enumerable:   false,
-                value:        strippedId
+                value:        id
             });
-            addTypeMapping(target, strippedId);
+            addTypeMapping(target, id);
         } else {
             const { get } = descriptor;
             if (!$isFunction(get)) {
                 throw new SyntaxError("@typeId can only be applied to classes or properties.");
             }
-            const [property] = args,
-                  options    = mapping.getOrCreateOwn(target, () => ({}));
-            options.ignore = true;
-            if (!$isNothing(property)) {
-                options.typeIdProperty = property;
-            }
+            mapping.getOrCreateOwn(target, () => ({})).ignore = true;
             Object.defineProperty(target, TypeIdResolver, {
                 configurable: false,
                 enumerable:   false,
-                get:          function () { return this[key]; }
+                get:          function () { 
+                    const id = this[key];
+                    if (!$isString(id)) {
+                        throw new Error(`@typeId getter '${key}' returned invalid identifier ${id}.`);
+                    }
+                    return id;
+                }
             });
         }
     }, args);
 }
+
+/**
+ * Maintains type information for a class.
+ * @method typeInfo
+ * @param  {String}  property  -  member mapping
+ */  
+export const typeInfo = Metadata.decorator(typeInfoMetadataKey,
+    (target, key, descriptor, [typeIdProperty]) => {
+        if (!$isNothing(descriptor)) {
+            throw new SyntaxError("@typeInfo can only be applied to a class.");
+        }
+        if (!$isString(typeIdProperty)) {
+            throw new Error(`The type id property '${typeIdProperty}' is not valid.`);
+        }
+        typeInfo.getOrCreateOwn(target, () => ({})).typeIdProperty = typeIdProperty;
+    });
 
 export function getTypeId(target) {
     return target?.[TypeIdResolver];
