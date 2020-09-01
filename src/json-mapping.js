@@ -21,7 +21,7 @@ export const JsonFormat            = Symbol("json"),
              DefaultTypeIdProperty = "$type";
 
 /**
- * Handler for performing mapping to javascript object.
+ * Handler for mapping to or from json values.
  * @class JsonMapping
  * @extends AbstractMapping
  */
