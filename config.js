@@ -9,8 +9,8 @@ System.config({
   map: {
     "@jspm/core": "npm:@jspm/core@1.1.1",
     "chai": "npm:chai@4.2.0",
-    "miruken-callback": "npm:miruken-callback@0.0.5-alpha.55",
-    "miruken-context": "npm:miruken-context@0.0.5-alpha.26",
+    "miruken-callback": "npm:miruken-callback@0.0.5-alpha.56",
+    "miruken-context": "npm:miruken-context@0.0.5-alpha.27",
     "miruken-core": "npm:miruken-core@0.0.5-alpha.41",
     "github:jspm/nodelibs-assert@0.1.0": {
       "assert": "npm:assert@1.5.0"
@@ -54,11 +54,11 @@ System.config({
     "npm:inherits@2.0.1": {
       "util": "github:jspm/nodelibs-util@0.1.0"
     },
-    "npm:miruken-callback@0.0.5-alpha.55": {
+    "npm:miruken-callback@0.0.5-alpha.56": {
       "miruken-core": "npm:miruken-core@0.0.5-alpha.41"
     },
-    "npm:miruken-context@0.0.5-alpha.26": {
-      "miruken-callback": "npm:miruken-callback@0.0.5-alpha.55",
+    "npm:miruken-context@0.0.5-alpha.27": {
+      "miruken-callback": "npm:miruken-callback@0.0.5-alpha.56",
       "miruken-core": "npm:miruken-core@0.0.5-alpha.41"
     },
     "npm:miruken-core@0.0.5-alpha.41": {
